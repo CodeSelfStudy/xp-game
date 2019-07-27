@@ -1,13 +1,2 @@
-Click==7.0
 Flask==1.1.1
 Flask-SocketIO==4.1.0
-gevent==1.4.0
-gevent-websocket==0.10.1
-greenlet==0.4.15
-itsdangerous==1.1.0
-Jinja2==2.10.1
-MarkupSafe==1.1.1
-python-engineio==3.8.2.post1
-python-socketio==4.2.0
-six==1.12.0
-Werkzeug==0.15.5

@@ -1,5 +1,5 @@
 ## Installation and usage
-- Requires typescript 3.* and a newish python3
+- Requires typescript 3.* and a >= python 3.7
 - `pip install -r requirements.txt` to install server dependencies
 - `make start` to run the servers (it will start `python app.py` and `tsc --watch`)
 

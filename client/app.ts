@@ -8,15 +8,16 @@ type Canvas = {
 
 type Action = "Up" | "Down" | "Left" | "Right";
 
+type Vector = { x: number, y: number }
+
 type World = {
     scale: number;
     entities: Entity[];
 }
 
 type Entity = {
-    x: number,
-    y: number,
-    color?: string
+    position: Vector;
+    color?: string;
 }
 
 export function initialize(){
@@ -30,11 +31,14 @@ export function initialize(){
     };
     document.addEventListener("keydown", (e) => { sendMessage(socket, handleInput(e)) }, false);
     socket.on('world', (state) => {
-        let entities = Object.keys(state.entities).map(e=> ({
-            x: state.entities[e][0], y: state.entities[e][1],
-            color: socket.id == e ? "blue" : undefined
+        let entities = state.entities.map((e,i)=> ({
+            position: {
+                x: e.position.x,
+                y: e.position.y,
+            },
+            color: socket.id == e.client_id ? "blue" : undefined
         }));
-        world.entities = entities;
+        world.entities = entities as Entity[];
     });
     setInterval(() => update({canvas, ctx}, world), 100);
 }
@@ -74,7 +78,8 @@ function drawGrid(c: Canvas, scale: number){
 
 function draw(c: Canvas, thing: Entity, scale: number){
     c.ctx.beginPath()
-    c.ctx.rect(thing.x*scale, thing.y*scale, scale, scale);
+    c.ctx.rect(thing.position.x*scale, thing.position.y*scale,
+               scale, scale);
     c.ctx.fillStyle = thing.color || "red";
     c.ctx.fill();
     c.ctx.closePath();

@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 import server.ticker as ticker
 
 
@@ -45,4 +45,3 @@ if __name__ == '__main__':
     socketio.start_background_task(ticker.run_ticker, socketio)
     socketio.run(app, use_reloader=True, debug=True, log_output=True,
                  host=DEBUG_HOST, port=DEBUG_PORT)
-
