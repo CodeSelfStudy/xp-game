@@ -11,43 +11,41 @@ type Action = "Up" | "Down" | "Left" | "Right";
 type Vector = { x: number, y: number }
 
 type World = {
-    scale: number;
+    width: number;
+    height: number;
     entities: Entity[];
 }
 
 type Entity = {
     position: Vector;
-    color?: string;
+    client_id: string;
 }
 
 export function initialize(){
     var socket = io('http://localhost:5000');
-    socket.on('connect', () => sendMessage(socket, "connected"));
+    let clientId: string;
+    socket.on('connect', () => {
+        sendMessage(socket, "connected")
+        clientId = socket.id;
+    });
+    let scale = 50;
     const canvas = <HTMLCanvasElement>document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const world: World = {
-        scale: 50,
+    let world: World = {
+        width: 100,
+        height: 100,
         entities: []
     };
     document.addEventListener("keydown", (e) => { sendMessage(socket, handleInput(e)) }, false);
-    socket.on('world', (state) => {
-        let entities = state.entities.map((e,i)=> ({
-            position: {
-                x: e.position.x,
-                y: e.position.y,
-            },
-            color: socket.id == e.client_id ? "blue" : undefined
-        }));
-        world.entities = entities as Entity[];
-    });
-    setInterval(() => update({canvas, ctx}, world), 100);
+    socket.on('world', (state: World) => { world = state; });
+    setInterval(() => update({canvas, ctx}, world, scale), 100, clientId);
 }
 
-function update(c: Canvas, world: World) {
+function update(c: Canvas, world: World, scale: number, clientId?: string) {
     c.ctx.clearRect(0,0, c.canvas.width, c.canvas.height);
-    drawGrid(c, world.scale);
+    drawGrid(c, scale);
     world.entities.forEach((e) => {
-        draw(c, e, world.scale);
+        draw(c, e, scale, clientId);
     })
 }
 
@@ -76,11 +74,11 @@ function drawGrid(c: Canvas, scale: number){
     }
 }
 
-function draw(c: Canvas, thing: Entity, scale: number){
+function draw(c: Canvas, thing: Entity, scale: number, clientId: string){
     c.ctx.beginPath()
     c.ctx.rect(thing.position.x*scale, thing.position.y*scale,
                scale, scale);
-    c.ctx.fillStyle = thing.color || "red";
+    c.ctx.fillStyle = clientId == thing.client_id ? "blue" : "red";
     c.ctx.fill();
     c.ctx.closePath();
 }
