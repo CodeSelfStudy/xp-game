@@ -1,8 +1,8 @@
 export type Vector = { x: number, y: number }
+export type Direction = "North" | "South" | "East" | "West";
 type V2 = Vector;
 
 export function vector(x: number, y: number): Vector { return {x: x, y: y } }
-export function zero(): V2 { return { x: 0, y: 0 }}
 export function equals(a: V2, b: V2): boolean { return a.x == b.x && a.y == b.y; }
 export function add(a: V2, b: V2): V2 {
     return {
@@ -15,4 +15,19 @@ export function subtract(a: V2, b: V2): V2 {
         x: a.x - b.x,
         y: a.y - b.y
     }
+}
+export function zero(): V2 { return vector(0, 0); }
+export function up(){ return vector(0, -1); }
+export function down(){ return vector(0, 1); }
+export function left(){ return vector(-1, 0); }
+export function right(){ return vector(1, 0); }
+
+export function dirToVec(direction: Direction){
+    switch(direction){
+        default: return zero();
+        case "North": return up();
+        case "South": return down();
+        case "West": return left();
+        case "East": return right();
+    };
 }

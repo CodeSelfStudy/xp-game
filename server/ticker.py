@@ -2,7 +2,7 @@ import queue
 import time
 from .domain import Entity, World, Action, Vector, to_dict
 
-TICK_INTERVAL = 0.5
+TICK_INTERVAL = 1
 
 action_queue = queue.Queue()
 
@@ -11,6 +11,13 @@ game_state = World(
     height=5,
     entities=[]
 )
+
+socket_server = None
+
+
+def emit(channel, data):
+    if socket_server:
+        socket_server.emit(channel, to_dict(data))
 
 
 def client_connect(client_id):
@@ -26,15 +33,22 @@ def client_disconnect(client_id):
                            if e.client_id != client_id]
 
 
-def enqueue_action(client_id, action):
-    if 'kind' in action:
-        action_queue.put(Action(client_id=client_id,
-                                kind=action.get('kind'),
-                                direction=action.get('direction')))
+def enqueue_action(action_message, client_id):
+    if not action_message or 'kind' not in action_message:
+        return
+    action = Action(client_id=client_id,
+                    kind=action_message.get('kind'),
+                    direction=action_message.get('direction'))
+    action_queue.put(action)
+    entity_maybe = [e for e in game_state.entities
+                    if e.client_id == action.client_id]
+    if len(entity_maybe) == 1:
+        entity = entity_maybe[0]
+        emit('view', {'entity': entity, 'action': action})
 
 
-def broadcast_state(socket_server):
-    socket_server.emit('world', to_dict(game_state))
+def broadcast_state():
+    emit('world', game_state)
 
 
 def process_tick():
@@ -64,11 +78,13 @@ def perform_move(entity: Entity, a: Action):
         entity.position.y += 1
 
 
-def run_ticker(socket_server):
+def run_ticker(socketio):
+    global socket_server
+    socket_server = socketio
     tick = 0
     while(True):
         time.sleep(TICK_INTERVAL)
         print("Current tick: " + str(tick))
         process_tick()
-        broadcast_state(socket_server)
+        broadcast_state()
         tick += 1

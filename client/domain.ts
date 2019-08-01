@@ -1,14 +1,13 @@
-import { Vector } from "./vectors";
+import { Vector, Direction } from "./vectors";
 
-export type Canvas = {
+export type RenderContext = {
     canvas: HTMLCanvasElement,
     ctx: CanvasRenderingContext2D
+    camera: { position: Vector; viewOffset: Vector; }
 }
 
 
-export type Direction = "North" | "South" | "East" | "West";
 export type ActionKind = "Move" | "Attack";
-
 export type Action = { direction: Direction, kind: ActionKind }
 
 

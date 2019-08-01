@@ -17,7 +17,7 @@ def homepage():
 
 @socketio.on('action')
 def handle_action(action):
-    ticker.enqueue_action(request.sid, action)
+    ticker.enqueue_action(action, request.sid)
 
 
 @socketio.on('connect')
