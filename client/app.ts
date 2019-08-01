@@ -62,7 +62,6 @@ function update(c: RenderContext, world: World, scale: number, clientId?: string
         let color = clientId == e.client_id ? "blue" : "red";
         drawRect(c, localPos, scale, {fillColor: color});
         if(e.current_action){
-            console.log(e);
             let actionColor = e.current_action.kind == "Move"
                 ? "blue"
                 : "red";
