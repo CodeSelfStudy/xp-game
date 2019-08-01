@@ -16,12 +16,8 @@ def homepage():
 
 
 @socketio.on('action')
-def handle_action(message):
-    if 'action' not in message:
-        return
-    action = message['action']
-    client_id = request.sid
-    ticker.enqueue_action(client_id, action)
+def handle_action(action):
+    ticker.enqueue_action(request.sid, action)
 
 
 @socketio.on('connect')

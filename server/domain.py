@@ -25,5 +25,5 @@ class World:
 @dataclass
 class Action:
     client_id: str
-    action: str
-
+    kind: str # Move | Attack
+    direction: str # North | South | East | West

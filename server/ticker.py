@@ -27,7 +27,10 @@ def client_disconnect(client_id):
 
 
 def enqueue_action(client_id, action):
-    action_queue.put(Action(client_id=client_id, action=action))
+    if 'kind' in action:
+        action_queue.put(Action(client_id=client_id,
+                                kind=action.get('kind'),
+                                direction=action.get('direction')))
 
 
 def broadcast_state(socket_server):
@@ -44,14 +47,21 @@ def process_tick():
         a = actions.get(entity.client_id)
         if a is None:
             continue
-        if a.action == 'Left' and entity.position.x > 0:
-            entity.position.x -= 1
-        if a.action == 'Right' and entity.position.x < game_state.height - 1:
-            entity.position.x += 1
-        if a.action == 'Up' and entity.position.y > 0:
-            entity.position.y -= 1
-        if a.action == 'Down' and entity.position.y < game_state.height - 1:
-            entity.position.y += 1
+        if a.kind == "Move":
+            perform_move(entity, a)
+        if a.kind == "Attack":
+            print(f"{a.client_id} Attacks {a.direction}")
+
+
+def perform_move(entity: Entity, a: Action):
+    if a.direction == 'West' and entity.position.x > 0:
+        entity.position.x -= 1
+    if a.direction == 'East' and entity.position.x < game_state.height - 1:
+        entity.position.x += 1
+    if a.direction == 'North' and entity.position.y > 0:
+        entity.position.y -= 1
+    if a.direction == 'South' and entity.position.y < game_state.height - 1:
+        entity.position.y += 1
 
 
 def run_ticker(socket_server):
