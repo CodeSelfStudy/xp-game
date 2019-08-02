@@ -1,16 +1,21 @@
 import queue
 import time
 from .domain import Entity, World, Action, Vector, to_dict
+from . import vectors as vec
+
 
 TICK_INTERVAL = 1
+WORLD_WIDTH = 5
+WORLD_HEIGHT = 5
 
 action_queue = queue.Queue()
 
 game_state = World(
-    width=5,
-    height=5,
-    entities=[]
+    width=WORLD_WIDTH,
+    height=WORLD_HEIGHT,
+    entities=[],
 )
+
 
 socket_server = None
 
@@ -28,7 +33,8 @@ def client_connect(client_id):
 
 def client_disconnect(client_id):
     # THIS IS BAD AND NOT AT ALL SAFE.  DON'T DO THIS.
-    # TODO - should be processed as an action in tick loop
+    # TODO - should be processed synchronously as an action in tick loop
+    # or asynchronously using a safe structure
     game_state.entities = [e for e in game_state.entities
                            if e.client_id != client_id]
 
@@ -62,20 +68,39 @@ def process_tick():
         if a is None:
             continue
         if a.kind == "Move":
-            perform_move(entity, a)
+            perform_move(entity, a.direction)
         if a.kind == "Attack":
-            print(f"{a.client_id} Attacks {a.direction}")
+            perform_action(entity, a.direction)
 
 
-def perform_move(entity: Entity, a: Action):
-    if a.direction == 'West' and entity.position.x > 0:
-        entity.position.x -= 1
-    if a.direction == 'East' and entity.position.x < game_state.height - 1:
-        entity.position.x += 1
-    if a.direction == 'North' and entity.position.y > 0:
-        entity.position.y -= 1
-    if a.direction == 'South' and entity.position.y < game_state.height - 1:
-        entity.position.y += 1
+def perform_move(entity: Entity, direction: str):
+    step = vec.dir_to_vec(direction)
+    position = vec.add(step, entity.position) if step else None
+
+    if position and game_state.in_bounds(position):
+        entity.position = position
+
+
+def perform_action(entity: Entity, direction: str):
+    # TODO cache making the grid per frame, and make available to actions
+    grid = game_state.make_grid()
+    step = vec.dir_to_vec(direction)
+    target_pos = vec.add(step, entity.position) if step else None
+
+    target = (grid[target_pos.y][target_pos.x]
+              if game_state.in_bounds(target_pos) else None)
+    if target:
+        result = f"They strike {target[0].client_id[0:5]}"
+    else:
+        result = "They miss."
+
+    event = {
+        'id': "",
+        # TODO - replace the sliced client id with a name
+        'body': f"""{entity.client_id[0:5]} swings their vorpal """
+                f"""sword to the {direction}. {result}"""
+    }
+    socket_server.emit('chat', event)
 
 
 def run_ticker(socketio):

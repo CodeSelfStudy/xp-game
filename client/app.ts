@@ -7,7 +7,7 @@ import {
 } from "./chat.js";
 import { vector } from "./vectors.js"
 import * as Vec from "./vectors.js"
-import { RenderContext, World, Entity, Action } from "./domain.js";
+import { RenderContext, World, Entity, Action, ActionKind } from "./domain.js";
 import { drawRect, drawGrid } from "./draw.js"; 
 
 declare var io: any;
@@ -24,17 +24,22 @@ export function initialize(){
         entities: []
     };
 
-    let getRenderContext = (entities: Entity[]): RenderContext => {
+    let getRenderContext = (): RenderContext => {
         let player = world.entities.find(e=> e.client_id == socket.id);
         let viewCenter = vector(4,3);
         let cameraWorld = player ? player.position : viewCenter;
         return {canvas, ctx, camera: {position: cameraWorld, viewOffset: viewCenter}};
     }
     
-    document.addEventListener("keydown", (e) => { sendAction(socket, handleInput(e)) }, false);
+    // TODO - move to an input handling module that can be initialized here
+    document.addEventListener("keydown", (e) => {
+        let input = handleKeyDown(e);
+        if(input){sendAction(socket, input)}
+    }, false);
+    document.addEventListener("keyup", handleKeyUp, false);
     socket.on('world', (state: World) => {
         world = state;
-        update(getRenderContext(state.entities), world, scale, socket.id);
+        update(getRenderContext(), world, scale, socket.id);
     });
     // Load chat messages from the initial data (if any)
     const chatMessages: HTMLElement[] = chatData.map(msg => formatMessage(msg));
@@ -48,7 +53,7 @@ export function initialize(){
         if(entity){
             entity.current_action = actionEvent.action;
         }
-        update(getRenderContext(world.entities), world, scale, socket.id);
+        update(getRenderContext(), world, scale, socket.id);
     });
 }
 
@@ -71,18 +76,34 @@ function update(c: RenderContext, world: World, scale: number, clientId?: string
     });
 }
 
-function handleInput(event: KeyboardEvent): Action | undefined {
+
+// TODO - move to an input module
+let CTRL_DOWN = false;
+function handleKeyUp(event: KeyboardEvent){
+    switch (event.key){
+        case "Control":
+            CTRL_DOWN = false;
+    }
+}
+
+function handleKeyDown(event: KeyboardEvent): Action | undefined {
+    let action: ActionKind = CTRL_DOWN ? "Attack" : "Move";
     switch (event.key) {
+        case "Control":
+            console.log("key down");
+            CTRL_DOWN = true
+            break;
         case "ArrowLeft":
-            return { direction: "West", kind: "Move" };
+            return { direction: "West", kind: action };
         case "ArrowRight":
-            return { direction: "East", kind: "Move" };
+            return { direction: "East", kind: action };
         case "ArrowUp":
-            return { direction: "North", kind: "Move" };
+            return { direction: "North", kind: action };
         case "ArrowDown":
-            return { direction: "South", kind: "Move" };
+            return { direction: "South", kind: action };
     }
     return undefined;
 }
+
 
 window.addEventListener("load", () => initialize());

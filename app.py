@@ -14,7 +14,6 @@ def homepage():
     return render_template('index.html')
 
 
-
 @socketio.on('action')
 def handle_action(action):
     ticker.enqueue_action(action, request.sid)
