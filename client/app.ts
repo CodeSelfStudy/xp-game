@@ -8,7 +8,7 @@ import {
 import { vector } from "./vectors.js"
 import * as Vec from "./vectors.js"
 import { RenderContext, World, Entity, Action } from "./domain.js";
-import { drawRect, drawGrid } from "./draw.js"; 
+import { drawRect, drawGrid } from "./draw.js";
 
 declare var io: any;
 
@@ -30,8 +30,9 @@ export function initialize(){
         let cameraWorld = player ? player.position : viewCenter;
         return {canvas, ctx, camera: {position: cameraWorld, viewOffset: viewCenter}};
     }
-    
+
     document.addEventListener("keydown", (e) => { sendAction(socket, handleInput(e)) }, false);
+
     socket.on('world', (state: World) => {
         world = state;
         update(getRenderContext(state.entities), world, scale, socket.id);
@@ -74,12 +75,16 @@ function update(c: RenderContext, world: World, scale: number, clientId?: string
 function handleInput(event: KeyboardEvent): Action | undefined {
     switch (event.key) {
         case "ArrowLeft":
+            event.preventDefault();
             return { direction: "West", kind: "Move" };
         case "ArrowRight":
+            event.preventDefault();
             return { direction: "East", kind: "Move" };
         case "ArrowUp":
+            event.preventDefault();
             return { direction: "North", kind: "Move" };
         case "ArrowDown":
+            event.preventDefault();
             return { direction: "South", kind: "Move" };
     }
     return undefined;
