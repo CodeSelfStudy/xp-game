@@ -1,6 +1,8 @@
 import queue
 import time
-from .domain import Entity, World, Action, Vector, to_dict
+from collections import defaultdict
+from .domain import Entity, Action, Vector, to_dict
+from .world import World
 from . import vectors as vec
 
 
@@ -25,20 +27,6 @@ def emit(channel, data):
         socket_server.emit(channel, to_dict(data))
 
 
-def client_connect(client_id):
-    # TOOD - process as an action in tick loop
-    game_state.entities.append(Entity(position=Vector(0, 0),
-                                      client_id=client_id))
-
-
-def client_disconnect(client_id):
-    # THIS IS BAD AND NOT AT ALL SAFE.  DON'T DO THIS.
-    # TODO - should be processed synchronously as an action in tick loop
-    # or asynchronously using a safe structure
-    game_state.entities = [e for e in game_state.entities
-                           if e.client_id != client_id]
-
-
 def enqueue_action(action_message, client_id):
     if not action_message or 'kind' not in action_message:
         return
@@ -46,31 +34,42 @@ def enqueue_action(action_message, client_id):
                     kind=action_message.get('kind'),
                     direction=action_message.get('direction'))
     action_queue.put(action)
-    entity_maybe = [e for e in game_state.entities
-                    if e.client_id == action.client_id]
-    if len(entity_maybe) == 1:
-        entity = entity_maybe[0]
-        emit('view', {'entity': entity, 'action': action})
 
-
-def broadcast_state():
-    emit('world', game_state)
+    # if the action should be telegraphed between ticks, broadcast it
+    if action.kind in {"Attack", "Move"}:
+        entity = game_state.get_entity_by_id(action.client_id)
+        if entity:
+            emit('view', {'entity': entity, 'action': action})
 
 
 def process_tick():
-    actions = {}
+    action_filter = {}
     while not action_queue.empty():
+        # filter to a single action per user
         a = action_queue.get(block=True)
-        actions[a.client_id] = a
+        action_filter[a.client_id] = a
 
-    for entity in game_state.entities:
-        a = actions.get(entity.client_id)
-        if a is None:
-            continue
-        if a.kind == "Move":
-            perform_move(entity, a.direction)
-        if a.kind == "Attack":
-            perform_action(entity, a.direction)
+    # group actions by kind
+    actions: dict[str, list[Action]] = defaultdict(list)
+    for a in action_filter.values():
+        actions[a.kind].append(a)
+
+    def action_args(action: Action) -> (Entity, str):
+        entity = game_state.get_entity_by_id(action.client_id)
+        return entity, action.direction
+
+    # Process actions in order of Despawn -> Move -> Attack -> Spawn
+    for a in actions.get('Despawn', []):
+        despawn_entity(a.client_id)
+
+    for a in actions.get('Move', []):
+        perform_move(*action_args(a))
+
+    for a in actions.get('Attack', []):
+        perform_action(*action_args(a))
+
+    for a in actions.get('Spawn', []):
+        spawn_entity(a.client_id)
 
 
 def perform_move(entity: Entity, direction: str):
@@ -87,10 +86,13 @@ def perform_action(entity: Entity, direction: str):
     step = vec.dir_to_vec(direction)
     target_pos = vec.add(step, entity.position) if step else None
 
-    target = (grid[target_pos.y][target_pos.x]
-              if game_state.in_bounds(target_pos) else None)
-    if target:
-        result = f"They strike {target[0].client_id[0:5]}"
+    loc = (grid[target_pos.y][target_pos.x]
+           if game_state.in_bounds(target_pos) else None)
+    if loc:
+        target = loc[0]
+        result = (f"They strike {target.client_id[0:5]}, "
+                  + "felling them in a single blow.")
+        despawn_entity(target.client_id)
     else:
         result = "They miss."
 
@@ -103,13 +105,29 @@ def perform_action(entity: Entity, direction: str):
     socket_server.emit('chat', event)
 
 
+def spawn_entity(client_id):
+    game_state.entities.append(Entity(position=Vector(0, 0),
+                                      client_id=client_id))
+
+
+def despawn_entity(client_id):
+    entity = game_state.get_entity_by_id(client_id)
+    if entity:
+        game_state.entities.remove(entity)
+
+
 def run_ticker(socketio):
+    """
+    Main game loop; loop fires every TICK_INTERVAL, updates game state,
+    and broadcasts the update to clients
+    """
     global socket_server
+    global game_state
     socket_server = socketio
     tick = 0
     while(True):
         time.sleep(TICK_INTERVAL)
         print("Current tick: " + str(tick))
         process_tick()
-        broadcast_state()
+        emit('world', game_state)
         tick += 1

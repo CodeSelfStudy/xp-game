@@ -21,12 +21,12 @@ def handle_action(action):
 
 @socketio.on('connect')
 def handle_connect():
-    ticker.client_connect(request.sid)
+    ticker.enqueue_action({'kind': 'Spawn'}, request.sid)
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    ticker.client_disconnect(request.sid)
+    ticker.enqueue_action({'kind': 'Despawn'}, request.sid)
 
 
 @socketio.on('chat')
