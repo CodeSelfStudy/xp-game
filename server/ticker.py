@@ -106,6 +106,9 @@ def perform_action(entity: Entity, direction: str):
 
 
 def spawn_entity(client_id):
+    # despawn any existing entity for the client_id
+    despawn_entity(client_id)
+    # create an entity identified by the given client_id
     game_state.entities.append(Entity(position=Vector(0, 0),
                                       client_id=client_id))
 

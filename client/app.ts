@@ -11,10 +11,11 @@ import { RenderContext, World, Entity, Action, ActionKind } from "./domain.js";
 import { drawRect, drawGrid } from "./draw.js"; 
 
 declare var io: any;
+declare var server: any;
 
 
 export function initialize(){
-    var socket = io("http://localhost:5000");
+    var socket = io();
     let scale = 50;
     const canvas = <HTMLCanvasElement>document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
@@ -40,6 +41,9 @@ export function initialize(){
     socket.on('world', (state: World) => {
         world = state;
         update(getRenderContext(), world, scale, socket.id);
+        if(!world.entities.find(e=> e.client_id == socket.id)){
+            sendAction(socket, {"kind": "Spawn"});
+        }
     });
     // Load chat messages from the initial data (if any)
     const chatMessages: HTMLElement[] = chatData.map(msg => formatMessage(msg));
@@ -59,6 +63,7 @@ export function initialize(){
 
 
 function update(c: RenderContext, world: World, scale: number, clientId?: string) {
+    let player = world.entities.find(e=> e.client_id == clientId);
     c.ctx.clearRect(0,0, c.canvas.width, c.canvas.height);
     let cameraOffset = Vec.subtract(c.camera.position, c.camera.viewOffset);
     drawGrid(c, cameraOffset, world.width, world.height, scale);

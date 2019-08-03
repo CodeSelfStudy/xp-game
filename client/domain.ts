@@ -7,8 +7,8 @@ export type RenderContext = {
 }
 
 
-export type ActionKind = "Move" | "Attack";
-export type Action = { direction: Direction, kind: ActionKind }
+export type ActionKind = "Move" | "Attack" | "Spawn";
+export type Action = { direction?: Direction, kind: ActionKind }
 
 
 export type World = {

@@ -1,10 +1,13 @@
+import os
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO
 import server.ticker as ticker
 
-
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'notarealsecret'
+app.config['SECRET_KEY'] = os.environ.get('GAME_SECRET', 'notarealsecret')
+HOST = os.environ.get('GAME_HOST', '127.0.0.1')
+PORT = os.environ.get('GAME_PORT', 5000)
+
 socketio = SocketIO(app)
 
 
@@ -14,19 +17,20 @@ def homepage():
     return render_template('index.html')
 
 
-@socketio.on('action')
-def handle_action(action):
-    ticker.enqueue_action(action, request.sid)
-
-
 @socketio.on('connect')
 def handle_connect():
-    ticker.enqueue_action({'kind': 'Spawn'}, request.sid)
+    # Authentication can go here
+    pass
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
     ticker.enqueue_action({'kind': 'Despawn'}, request.sid)
+
+
+@socketio.on('action')
+def handle_action(action):
+    ticker.enqueue_action(action, request.sid)
 
 
 @socketio.on('chat')
@@ -43,10 +47,8 @@ def handle_chat(incoming):
     socketio.emit('chat', outgoing)
 
 
-DEBUG_HOST = '127.0.0.1'
-DEBUG_PORT = 5000
 if __name__ == '__main__':
-    print(f"Starting server at {DEBUG_HOST}:{DEBUG_PORT}")
+    print(f"Starting server at {HOST}:{PORT}")
     socketio.start_background_task(ticker.run_ticker, socketio)
     socketio.run(app, use_reloader=True, debug=True, log_output=True,
-                 host=DEBUG_HOST, port=DEBUG_PORT)
+                 host=HOST, port=PORT)
