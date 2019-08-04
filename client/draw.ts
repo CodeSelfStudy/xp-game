@@ -2,7 +2,8 @@ import { RenderContext } from "./domain.js";
 import { Vector, vector } from "./vectors.js";
 import * as Vec from "./vectors.js";
  
-export function drawGrid(c: RenderContext, viewOffset: Vector, width: number, height: number,  scale: number){
+
+export function drawGrid(c: RenderContext, viewOffset: Vector, width: number, height: number){
     function drawGridline(x1: number, y1: number, x2: number, y2: number){
         c.ctx.beginPath();
         c.ctx.strokeStyle = "black";
@@ -20,6 +21,7 @@ export function drawGrid(c: RenderContext, viewOffset: Vector, width: number, he
         c.ctx.fill();
         c.ctx.closePath();
     }
+    let scale = c.scale;
     var n = scale;
     while(true){
         if(n > c.canvas.width+scale && n > c.canvas.height+scale){
@@ -42,13 +44,43 @@ export function drawGrid(c: RenderContext, viewOffset: Vector, width: number, he
     }
 }
 
+export function drawTile(c: RenderContext, position: Vector, tileId: string){
+    let tileIndex: number = (() => {
+        switch(tileId){
+            default:
+            case "ground":
+                return 0;
+            case "hero":
+                return 27;
+
+        }
+    })();
+    let tileX = tileIndex % c.tileset.nTilesPerRow;
+    let tileY = Math.floor(tileIndex / c.tileset.nTilesPerRow);
+    c.ctx.drawImage(c.tileset.img,
+                    // tileset coordinates
+                    tileX * c.tileset.tileWidth + tileX * c.tileset.margin,
+                    tileY * c.tileset.tileHeight + tileY * c.tileset.margin,
+                    // tileset tile size
+                    c.tileset.tileWidth,
+                    c.tileset.tileHeight,
+                    // screen draw position
+                    position.x * c.scale,
+                    position.y * c.scale,
+                    // screen draw
+                    c.scale, c.scale
+                   );
+}
+
+
 
 type DrawOptions = {
     fillColor?: string;
     strokeColor?: string;
 }
 
-export function drawRect(c: RenderContext, position: Vector, scale: number, options: DrawOptions ){
+export function drawRect(c: RenderContext, position: Vector, options: DrawOptions ){
+    let scale = c.scale;
     c.ctx.beginPath()
     c.ctx.rect(position.x*scale, position.y*scale,
                scale, scale);
@@ -63,3 +95,5 @@ export function drawRect(c: RenderContext, position: Vector, scale: number, opti
     }
     c.ctx.closePath();
 }
+
+

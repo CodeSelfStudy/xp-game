@@ -1,9 +1,20 @@
 import { Vector, Direction } from "./vectors";
 
+export interface Tileset {
+    tileWidth: number;
+    tileHeight: number;
+    margin: number;
+    img: HTMLImageElement;
+    nRows: number;
+    nTilesPerRow: number;
+}
+
 export type RenderContext = {
-    canvas: HTMLCanvasElement,
-    ctx: CanvasRenderingContext2D
-    camera: { position: Vector; viewOffset: Vector; }
+    canvas: HTMLCanvasElement;
+    ctx: CanvasRenderingContext2D;
+    camera: { position: Vector; viewOffset: Vector; };
+    scale: number;
+    tileset: Tileset;
 }
 
 
