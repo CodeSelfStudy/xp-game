@@ -87,6 +87,7 @@ function handleKeyPress(event: KeyboardEvent){
         case "a":
         case "A":
             ATK_PRESSED = true;
+            break;
     }
 }
 
