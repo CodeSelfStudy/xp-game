@@ -35,7 +35,7 @@ export function initialize(){
         let input = handleKeyDown(e);
         if(input){sendAction(socket, input)}
     }, false);
-    document.addEventListener("keyup", handleKeyUp, false);
+    document.addEventListener("keypress", handleKeyPress, false);
     socket.on('world', (state: World) => {
         world = state;
         update(getRenderContext(), world, scale, socket.id);
@@ -81,22 +81,22 @@ function update(c: RenderContext, world: World, scale: number, clientId?: string
 
 
 // TODO - move to an input module
-let CTRL_DOWN = false;
-function handleKeyUp(event: KeyboardEvent){
+let ATK_PRESSED = false;
+function handleKeyPress(event: KeyboardEvent){
     switch (event.key){
-        case "Control":
-            CTRL_DOWN = false;
+        case "a":
+        case "A":
+            ATK_PRESSED = true;
     }
 }
 
 function handleKeyDown(event: KeyboardEvent): Action | undefined {
-    let action: ActionKind = CTRL_DOWN ? "Attack" : "Move";
+    // if the attack button has been pressed, set the action to Attack
+    // and clear the ATK_PRESSED input state 
+    let action: ActionKind = ATK_PRESSED ? "Attack" : "Move";
+    ATK_PRESSED = false;
+
     switch (event.key) {
-        case "Control":
-            event.preventDefault();
-            console.log("key down");
-            CTRL_DOWN = true
-            break;
         case "ArrowLeft":
             event.preventDefault();
             return { direction: "West", kind: action };
