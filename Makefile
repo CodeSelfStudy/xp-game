@@ -5,6 +5,7 @@ help:
 	@echo "start - start the dev servers"
 	@echo "flake8 - check the python code for PEP8"
 	@echo "prettier - check with prettier and write"
+	@echo "deploy - deploy to production server with fabric, requires ssh config"
 
 clean:
 	find . -name '*.pyc' -exec rm -f {} +
@@ -21,3 +22,7 @@ flake8:
 
 prettier:
 	prettier ./**/*.{js,css,json,sass} --check
+
+
+deploy:
+	fab -H xpgame deploy

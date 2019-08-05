@@ -1,3 +1,4 @@
 bleach==3.1.0
 Flask-SocketIO==4.1.0
 Flask==1.1.1
+fabric==2.4.0
