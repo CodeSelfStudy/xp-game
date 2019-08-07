@@ -1,9 +1,9 @@
 import queue
 import time
 from collections import defaultdict
-from typing import Callable, NoReturn
+from typing import Callable
 from .domain import Entity, Action, Vector, to_dict
-from .world import World
+from .world import World, LogicGrid, Tile
 from . import vectors as vec
 
 
@@ -17,6 +17,15 @@ game_state = World(
     width=WORLD_WIDTH,
     height=WORLD_HEIGHT,
     entities=[],
+    tile_grid=[
+        [
+            Tile(tile_id="ground", is_dense=False),
+            Tile(tile_id="ground", is_dense=False),
+            Tile(tile_id="ground", is_dense=False),
+            Tile(tile_id="ground", is_dense=False),
+            Tile(tile_id="wall", is_dense=True)
+        ]
+    ]*WORLD_HEIGHT
 )
 
 
@@ -55,44 +64,46 @@ def process_tick():
     for a in action_filter.values():
         actions[a.kind].append(a)
 
-    def perform_safe(func: Callable[[], NoReturn],
-                     action: Action) -> (Entity, str):
+    logic_grid = LogicGrid.get_logic_grid(game_state)
+
+    def perform_on_logic_grid(
+            func: Callable[[Action, str, LogicGrid], None],
+            action: Action) -> None:
         entity = game_state.get_entity_by_id(action.client_id)
         if entity:
-            return func(entity, action.direction)
+            func(entity, action.direction, logic_grid)
 
     # Process actions in order of Despawn -> Move -> Attack -> Spawn
     for a in actions.get('Despawn', []):
         despawn_entity(a.client_id)
 
     for a in actions.get('Move', []):
-        perform_safe(perform_move, a)
+        perform_on_logic_grid(perform_move, a)
 
     for a in actions.get('Attack', []):
-        perform_safe(perform_action, a)
+        perform_on_logic_grid(perform_action, a)
 
     for a in actions.get('Spawn', []):
         spawn_entity(a.client_id)
 
 
-def perform_move(entity: Entity, direction: str):
+def perform_move(entity: Entity, direction: str, logic_grid: LogicGrid):
     step = vec.dir_to_vec(direction)
-    position = vec.add(step, entity.position) if step else None
+    destination = vec.add(step, entity.position) if step else None
 
-    if position and game_state.in_bounds(position):
-        entity.position = position
+    if destination and logic_grid.is_passable(destination):
+        logic_grid.move_entity(entity, destination)
 
 
-def perform_action(entity: Entity, direction: str):
+def perform_action(entity: Entity, direction: str, logic_grid: LogicGrid):
     # TODO cache making the grid per frame, and make available to actions
-    grid = game_state.make_grid()
     step = vec.dir_to_vec(direction)
     target_pos = vec.add(step, entity.position) if step else None
 
-    loc = (grid[target_pos.y][target_pos.x]
-           if game_state.in_bounds(target_pos) else None)
-    if loc:
-        target = loc[0]
+    loc = (logic_grid.get_location(target_pos)
+           if logic_grid.world.in_bounds(target_pos) else None)
+    if loc.entity:
+        target = loc.entity
         result = (f"They strike {target.client_id[0:5]}, "
                   + "felling them in a single blow.")
         despawn_entity(target.client_id)
