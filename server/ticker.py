@@ -20,11 +20,7 @@ game_state = World(
     tile_grid=[
         [
             Tile(tile_id="ground", is_dense=False),
-            Tile(tile_id="ground", is_dense=False),
-            Tile(tile_id="ground", is_dense=False),
-            Tile(tile_id="ground", is_dense=False),
-            Tile(tile_id="wall", is_dense=True)
-        ]
+        ] * WORLD_WIDTH
     ]*WORLD_HEIGHT
 )
 
