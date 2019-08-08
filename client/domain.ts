@@ -26,10 +26,16 @@ export type World = {
     width: number;
     height: number;
     entities: Entity[];
+    tile_grid: Tile[][]
 }
 
 export type Entity = {
     position: Vector;
     client_id: string;
     current_action?: Action;
+}
+
+
+export type Tile = {
+    tile_id: string
 }

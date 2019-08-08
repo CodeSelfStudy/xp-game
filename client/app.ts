@@ -4,7 +4,7 @@ import {
     initializeChatListener,
 } from "./chat.js";
 import { printMessage, EventType } from './eventBox.js';
-import { vector } from "./vectors.js"
+import { vector, Vector } from "./vectors.js"
 import * as Vec from "./vectors.js"
 import { RenderContext, World, Entity, Action, ActionKind } from "./domain.js";
 import { drawRect, drawGrid, drawTile } from "./draw.js"; 
@@ -19,7 +19,8 @@ async function initialize(){
     let world: World = {
         width: 100,
         height: 100,
-        entities: []
+        entities: [],
+        tile_grid: []
     };
 
     // TODO: loading tiles blocks initialization; put this behind a load screen?
@@ -27,16 +28,17 @@ async function initialize(){
 
     let getRenderContext = (): RenderContext => {
         let player = world.entities.find(e=> e.client_id == socket.id);
-        let viewCenter = vector(4,3);
+        let scale = 50
+        let viewCenter = vector((canvas.width/scale/2)-1, (canvas.height/scale/2)-1);
         let cameraWorld = player ? player.position : viewCenter;
         return {
             canvas,
             ctx,
-            scale: 32,
+            scale: scale,
             camera: {position: cameraWorld, viewOffset: viewCenter},
             tileset
         };
-    }
+    };
 
     // TODO - move to an input handling module that can be initialized here
     document.addEventListener("keydown", (e) => {
@@ -70,11 +72,22 @@ async function initialize(){
 function render(c: RenderContext, world: World, clientId?: string) {
     c.ctx.clearRect(0,0, c.canvas.width, c.canvas.height);
     let cameraOffset = Vec.subtract(c.camera.position, c.camera.viewOffset);
+    function worldToView(worldPosition: Vector): Vector {
+        return Vec.subtract(worldPosition, cameraOffset);
+    }
+    function viewToWorld(viewPosition: Vector): Vector {
+        return Vec.add(viewPosition, cameraOffset);
+    }
 
     // Layer 1: Terrain
     for(var y = 0; y < c.canvas.height/c.scale; y++){
         for(var x = 0; x < c.canvas.width/c.scale; x++){
-            drawTile(c, {x, y}, "ground");
+            let worldPos = viewToWorld(vector(x, y))
+            let inBounds = worldPos.x >= 0 && worldPos.x < world.width
+                && worldPos.y >= 0 && worldPos.y < world.height;
+            let tileId = inBounds ? world.tile_grid[worldPos.y][worldPos.x].tile_id : "ground";
+            drawTile(c, {x, y}, tileId);
+            
         }
     }
     // layer 2: gridlines
@@ -82,7 +95,7 @@ function render(c: RenderContext, world: World, clientId?: string) {
 
     // Layer 3: player entities
     world.entities.forEach((e) => {
-        let localPos = Vec.subtract(e.position, cameraOffset);
+        let localPos = worldToView(e.position);
         let color = clientId == e.client_id ? "blue" : "red";
         drawTile(c, localPos, "hero");
         // TODO - split action rendering into a separate layer
@@ -91,7 +104,7 @@ function render(c: RenderContext, world: World, clientId?: string) {
                 ? "blue"
                 : "red";
             let actionTarget = Vec.add(e.position, Vec.dirToVec(e.current_action.direction));
-            drawRect(c, Vec.subtract(actionTarget, cameraOffset), {strokeColor:actionColor});
+            drawRect(c, worldToView(actionTarget), {strokeColor:actionColor});
         }
     });
 }

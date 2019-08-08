@@ -4,12 +4,13 @@ from collections import defaultdict
 from typing import Callable
 from .domain import Entity, Action, Vector, to_dict
 from .world import World, LogicGrid, Tile
+from .environment import generate_random_map
 from . import vectors as vec
 
 
 TICK_INTERVAL = 1
-WORLD_WIDTH = 5
-WORLD_HEIGHT = 5
+WORLD_WIDTH = 10
+WORLD_HEIGHT = 10 
 
 action_queue = queue.Queue()
 
@@ -17,11 +18,7 @@ game_state = World(
     width=WORLD_WIDTH,
     height=WORLD_HEIGHT,
     entities=[],
-    tile_grid=[
-        [
-            Tile(tile_id="ground", is_dense=False),
-        ] * WORLD_WIDTH
-    ]*WORLD_HEIGHT
+    tile_grid=generate_random_map(WORLD_WIDTH, WORLD_HEIGHT)
 )
 
 

@@ -2,7 +2,9 @@ export type Vector = { x: number, y: number }
 export type Direction = "North" | "South" | "East" | "West";
 type V2 = Vector;
 
-export function vector(x: number, y: number): Vector { return {x: x, y: y } }
+export function vector(x: number, y: number): Vector {
+    return {x: Math.round(x), y: Math.round(y) };
+}
 export function equals(a: V2, b: V2): boolean { return a.x == b.x && a.y == b.y; }
 export function add(a: V2, b: V2): V2 {
     return {

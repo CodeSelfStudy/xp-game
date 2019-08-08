@@ -50,6 +50,10 @@ export function drawTile(c: RenderContext, position: Vector, tileId: string){
             default:
             case "ground":
                 return 0;
+            case "grass":
+                return 6;
+            case "tree":
+                return 36;
             case "hero":
                 return 27;
 
