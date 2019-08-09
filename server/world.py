@@ -44,11 +44,12 @@ class Location:
 
 @dataclass
 class LogicGrid:
-    """Derived state from the world. Places entities and tiles in the same 2D
-    grid for efficient lookups.  Movement operations should be made through the 
-    logic grid via move_entity for positional tracking on the grid. If an entity's
-    position is updated outside of the logic grid, the grid should be invalidated
-    and re-derived from the world state."""
+    """
+    Derived state from the world. Places entities and tiles in the same 2D
+    grid for efficient lookups.  Movement operations should be made through
+    the logic grid via move_entity for positional tracking on the grid. If an
+    entity's position is updated outside of the logic grid, the grid should
+    be invalidated and re-derived from the world state."""
 
     world: World
     grid: List[List[Location]]
@@ -64,7 +65,7 @@ class LogicGrid:
             grid.append([])
             for x in range(world.height):
                 grid[y].append([])
-                grid[y][x] = Location(tile=world.get_tile(Vector(x,y)),
+                grid[y][x] = Location(tile=world.get_tile(Vector(x, y)),
                                       entity=None)
 
         for e in world.entities:
@@ -81,13 +82,15 @@ class LogicGrid:
         return self.grid[position.y][position.x]
 
     def move_entity(self, entity: Entity, destination: Vector) -> bool:
-        """Movements through the course of a tick need to be handled through move_entity
-        in order to keep the internal state of the logic grid consistent."""
+        """
+        Movements through the course of a tick need to be handled through move
+        entity to keep the internal state of the logic grid consistent.
+        """
         origin_loc = self.get_location(entity.position)
         dest_loc = self.get_location(destination)
         if self.is_passable(destination):
             origin_loc.entity = None
-            dest_loc.entity = entity 
+            dest_loc.entity = entity
             entity.position = destination
             return True
         return False

@@ -8,7 +8,7 @@ from .environment import generate_random_map
 from . import vectors as vec
 
 
-TICK_INTERVAL = 3
+TICK_INTERVAL = 1
 WORLD_WIDTH = 10
 WORLD_HEIGHT = 10
 
@@ -79,6 +79,10 @@ def process_tick():
     for a in actions.get('Spawn', []):
         spawn_entity(a.client_id)
 
+    for e in game_state.entities:
+        if e.health <= 0:
+            despawn_entity(e.client_id)
+
 
 def perform_move(entity: Entity, direction: str, logic_grid: LogicGrid):
     step = vec.dir_to_vec(direction)
@@ -97,16 +101,16 @@ def perform_action(entity: Entity, direction: str, logic_grid: LogicGrid):
            if logic_grid.world.in_bounds(target_pos) else None)
     if loc and loc.entity:
         target = loc.entity
-        result = (f"They strike {target.client_id[0:5]}, "
-                  + "felling them in a single blow.")
-        despawn_entity(target.client_id)
+        result = (f"They strike {target.get_name()}, "
+                  + "dealing 1 damage.")
+        target.health -= 1
     else:
         result = "They miss."
 
     event = {
         'id': "",
         # TODO - replace the sliced client id with a name
-        'body': f"""{entity.client_id[0:5]} swings their vorpal """
+        'body': f"""{entity.get_name()} swings their vorpal """
                 f"""sword to the {direction}. {result}"""
     }
     socket_server.emit('chat', event)
@@ -117,7 +121,8 @@ def spawn_entity(client_id):
     despawn_entity(client_id)
     # create an entity identified by the given client_id
     game_state.entities.append(Entity(position=Vector(0, 0),
-                                      client_id=client_id))
+                                      client_id=client_id,
+                                      health=5))
 
 
 def despawn_entity(client_id):

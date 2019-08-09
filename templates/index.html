@@ -8,6 +8,8 @@
         <script src="/static/dist/domain.js" type="module"></script>
         <script src="/static/dist/server.js" type="module"></script>
         <script src="/static/dist/app.js" type="module"></script>
+        <script src="/static/dist/stats.js" type="module"></script>
+        <script src="/static/dist/sanitizer.js" type="module"></script>
         <style>
             * { padding: 0; margin: 0; }
             canvas { background: #eee; display: block; margin: 0 auto; }
@@ -17,16 +19,30 @@
     <body>
         <noscript>Please enable JavaScript to play this game.</noscript>
 
-        <canvas id="canvas" width="450" height="450"></canvas>
+        <div class="layout">
+            <canvas id="canvas" class="view" width="450" height="450"></canvas>
 
-        <!-- Chat could be moved into canvas later, if needed. -->
-        <div id="chat">
-            <div class="messages" id="messages"></div>
+            <!-- Chat could be moved into canvas later, if needed. -->
+            <div id="chat" class="chat">
+                <div class="messages" id="messages"></div>
 
-            <form autocomplete="off" id="chatForm" class="chat-form">
-                <input type="text" id="chatMessageInput" placeholder="Enter a chat message" />
-                <input type="submit" value="Send" />
-            </form>
+                <form autocomplete="off" id="chatForm" class="chat-form">
+                    <input type="text" id="chatMessageInput" placeholder="Enter a chat message" />
+                    <input type="submit" value="Send" />
+                </form>
+            </div>
+            <div class="stats">
+                <p class="stats-item"><b id="username">Player</b></p>
+                <p class="stats-item"><b>Level 1 Human</b></p>
+                <p class="stats-item"><b>Health </b>
+                    <span id="current-hp">10</span>/5
+                </p>
+                <p class="stats-item"><b>Equipment</b></p>
+                <ul>
+                    <li class="equipment-item">Vorpal Sword</li>
+                </ul>
+                 
+            </div>
         </div>
     </body>
 </html>

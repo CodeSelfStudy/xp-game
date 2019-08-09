@@ -16,6 +16,10 @@ class Vector:
 class Entity:
     position: Vector
     client_id: str
+    health: int
+
+    def get_name(self):
+        return self.client_id[-7]
 
 
 @dataclass

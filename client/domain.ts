@@ -33,6 +33,7 @@ export type Entity = {
     position: Vector;
     client_id: string;
     current_action?: Action;
+    health: number;
 }
 
 

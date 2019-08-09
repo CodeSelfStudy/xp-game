@@ -1,15 +1,51 @@
+.layout {
+    display: grid;
+    grid-template-columns: 500px 300px;
+    grid-gap: 10px;
+    grid-template-areas:
+            "view stats"
+            "chat chat";
+    margin: 10px 0px 0px 100px;
+}
+
+.view {
+    grid-area: view;
+}
+
+.stats {
+    grid-area: stats;
+    outline: #ccc 1px solid;
+    height: 440px;
+    margin-top: 10px;
+    width: 280px;0
+}
+
+.stats-item {
+    padding: 1px 4px;
+}
+
+.equipment-item {
+    margin-left: 20px
+}
+
+
+.chat {
+    grid-area: chat;
+}
+
+
 #chat {
     outline: #ccc 1px solid;
     padding: 7px;
-    height: 400px;
-    width: 480px;
+    height: 250px;
+    width: 750px;
     margin: 17px auto;
     font-family: monospace;
     color: #333;
 }
 .messages {
     /* outline: blue 1px solid; */
-    height: 350px;
+    height: 200px;
     overflow: auto;
 }
 .chat-form {

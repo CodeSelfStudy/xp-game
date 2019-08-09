@@ -9,11 +9,16 @@ import * as Vec from "./vectors.js"
 import { RenderContext, World, Entity, Action, ActionKind } from "./domain.js";
 import { drawRect, drawGrid, drawTile } from "./draw.js"; 
 import { getTileset } from "./tileset.js";
+import { setHealth, setUsername } from "./stats.js";
 
 declare var io: any;
 
 async function initialize(){
     var socket = io('/');
+    socket.on('connect', () => {
+        setUsername(socket.id.slice(-7));
+        setHealth(10);
+    });
     const canvas = <HTMLCanvasElement>document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     let world: World = {
@@ -48,9 +53,14 @@ async function initialize(){
     document.addEventListener("keypress", handleKeyPress, false);
     socket.on('world', (state: World) => {
         world = state;
-        render(getRenderContext(), world, socket.id);
-        if(!world.entities.find(e=> e.client_id == socket.id)){
+        render(getRenderContext(), world);
+        let player = world.entities.find(e=> e.client_id == socket.id)
+        if(!player){
             sendAction(socket, {"kind": "Spawn"});
+        }
+        else{
+            // TODO move to a stat update function
+            setHealth(player.health)
         }
     });
     // Load chat messages from the initial data (if any)
@@ -64,12 +74,12 @@ async function initialize(){
         if(entity){
             entity.current_action = actionEvent.action;
         }
-        render(getRenderContext(), world, socket.id);
+        render(getRenderContext(), world);
     });
 }
 
 
-function render(c: RenderContext, world: World, clientId?: string) {
+function render(c: RenderContext, world: World) {
     c.ctx.clearRect(0,0, c.canvas.width, c.canvas.height);
     let cameraOffset = Vec.subtract(c.camera.position, c.camera.viewOffset);
     function worldToView(worldPosition: Vector): Vector {
@@ -96,7 +106,6 @@ function render(c: RenderContext, world: World, clientId?: string) {
     // Layer 3: player entities
     world.entities.forEach((e) => {
         let localPos = worldToView(e.position);
-        let color = clientId == e.client_id ? "blue" : "red";
         drawTile(c, localPos, "hero");
         // TODO - split action rendering into a separate layer
         if(e.current_action){
