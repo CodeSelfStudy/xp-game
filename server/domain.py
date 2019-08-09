@@ -19,7 +19,7 @@ class Entity:
     health: int
 
     def get_name(self):
-        return self.client_id[-7]
+        return self.client_id[-7:]
 
 
 @dataclass
