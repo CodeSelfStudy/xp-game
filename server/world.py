@@ -17,7 +17,6 @@ class World:
     entities: List[Entity]
     tile_grid: List[List[Tile]]
 
-
     def get_tile(self, position: Vector) -> Tile:
         """Returns the tile for a position; position must be in bounds"""
         return self.tile_grid[position.y][position.x]
@@ -27,8 +26,10 @@ class World:
                 and vector.y >= 0 and vector.y < self.width)
 
     def get_entity_by_id(self, id: str) -> Optional[Entity]:
-        """Get the entity by its id. This is the preferred way of retrieving
-        and entity, and can be optimized for constant-time lookup when needed"""
+        """
+        Get the entity by its id. This is the preferred way of retrieving
+        and entity, and can be optimized for constant-time lookup when needed
+        """
         for e in self.entities:
             if e.client_id == id:
                 return e

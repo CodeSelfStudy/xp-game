@@ -1,9 +1,13 @@
 import os
+from typing import Dict
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO
 from server.sanitizer import sanitize
 from server.logger import create_logger
 import server.ticker as ticker
+from server.domain import ClientEvent
+from server.utils import from_dict
+
 
 log = create_logger(__name__)
 log.game_event('created logger')
@@ -14,6 +18,7 @@ HOST = os.environ.get('GAME_HOST', '127.0.0.1')
 PORT = os.environ.get('GAME_PORT', 5000)
 
 socketio = SocketIO(app)
+client_names: Dict[str, str] = {}
 
 
 @app.route('/')
@@ -34,10 +39,26 @@ def handle_disconnect():
     ticker.enqueue_action({'kind': 'Despawn'}, request.sid)
 
 
+@socketio.on('event')
+def handle_event(event_dict):
+    """
+    Events are of the format { kind: str, data: {...}}
+    """
+    global client_names
+    event = from_dict(event_dict, ClientEvent)
+
+    if event and event.kind == ClientEvent.LOGIN_EVENT_KIND:
+        # TODO-- get from_dict to parse recursively
+        client_names[request.sid] = event.detail['character_name']
+        ticker.enqueue_action({'kind': 'Spawn'}, request.sid)
+
+
 @socketio.on('action')
 def handle_action(action):
-    log.game_event(f'action: {action} by {request.sid}')
-    ticker.enqueue_action(action, request.sid)
+    allowed_actions = {'Attack', 'Move'}
+    if action['kind'] in allowed_actions:
+        log.game_event(f'action: {action} by {request.sid}')
+        ticker.enqueue_action(action, request.sid)
 
 
 @socketio.on('chat')
@@ -49,7 +70,7 @@ def handle_chat(incoming):
     trimmed_message = incoming['body'].strip()
     if trimmed_message:
         outgoing = {
-            'id': request.sid,
+            'id': client_names.get(request.sid),
             'body': sanitize(trimmed_message),
         }
         log.game_event(f'chat_message: {outgoing}')
@@ -58,6 +79,6 @@ def handle_chat(incoming):
 
 if __name__ == '__main__':
     print(f"Starting server at {HOST}:{PORT}")
-    socketio.start_background_task(ticker.run_ticker, socketio)
+    socketio.start_background_task(ticker.run_ticker, socketio, client_names)
     socketio.run(app, use_reloader=True, debug=True, log_output=True,
                  host=HOST, port=PORT)

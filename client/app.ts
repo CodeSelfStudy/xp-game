@@ -1,4 +1,4 @@
-import { sendAction } from "./server.js";
+import { sendAction, requestLogin } from "./server.js";
 import { chatData, initializeChatListener } from "./chat.js";
 import { printMessage, EventType } from './eventBox.js';
 import { vector, Vector } from "./vectors.js"
@@ -12,13 +12,15 @@ import { sanitize } from "./sanitizer.js";
 declare var io: any;
 
 async function initialize(){
-    var socket = io('/');
+    // TODO: loading tiles blocks initialization; put this behind a load screen?
+    const tileset = await getTileset();
 
+    var socket = io('/');
     function respawn(){
         handleLogin(name => {
-            setUsername(name)
+            setUsername(name);
             setHealth(0);
-            sendAction(socket, {"kind": "Spawn"});
+            requestLogin(socket, name);
         });
     }
 
@@ -33,17 +35,12 @@ async function initialize(){
         entities: [],
         tile_grid: []
     };
-
-    // TODO: loading tiles blocks initialization; put this behind a load screen?
-    const tileset = await getTileset();
-
     let getRenderContext = (): RenderContext => {
         let player = world.entities.find(e=> e.client_id == socket.id);
         let scale = 50
         let viewCenter = vector((canvas.width/scale/2)-1, (canvas.height/scale/2)-1);
         let cameraWorld = player ? player.position : viewCenter;
         return {
-            canvas,
             ctx,
             scale: scale,
             camera: {position: cameraWorld, viewOffset: viewCenter},
@@ -61,11 +58,7 @@ async function initialize(){
         world = state;
         render(getRenderContext(), world);
         let player = world.entities.find(e=> e.client_id == socket.id)
-        if(!player){
-            respawn();
-        }
-        else{
-            // TODO move to a stat update function
+        if(player){
             setHealth(player.health)
         }
     });
@@ -86,7 +79,7 @@ async function initialize(){
 
 
 function render(c: RenderContext, world: World) {
-    c.ctx.clearRect(0,0, c.canvas.width, c.canvas.height);
+    c.ctx.clearRect(0,0, c.ctx.canvas.width, c.ctx.canvas.height);
     let cameraOffset = Vec.subtract(c.camera.position, c.camera.viewOffset);
     function worldToView(worldPosition: Vector): Vector {
         return Vec.subtract(worldPosition, cameraOffset);
@@ -96,8 +89,8 @@ function render(c: RenderContext, world: World) {
     }
 
     // Layer 1: Terrain
-    for(var y = 0; y < c.canvas.height/c.scale; y++){
-        for(var x = 0; x < c.canvas.width/c.scale; x++){
+    for(var y = 0; y < c.ctx.canvas.height/c.scale; y++){
+        for(var x = 0; x < c.ctx.canvas.width/c.scale; x++){
             let worldPos = viewToWorld(vector(x, y))
             let inBounds = worldPos.x >= 0 && worldPos.x < world.width
                 && worldPos.y >= 0 && worldPos.y < world.height;
@@ -167,8 +160,8 @@ function handleLogin(onLogin: (name: string) => void){
     const loginDiv: HTMLElement = document.getElementById("login");
     loginDiv.style.display = null;
     const loginForm: HTMLElement = document.getElementById("loginForm");
-    function subscribe(e){
-        e.preventDefault();
+    function subscribe(e: Event){
+        e.preventDefault()
         const loginFormMessageInput = <HTMLInputElement>document.getElementById("loginFormInput");
         const name: string = sanitize(loginFormMessageInput.value.trim());
         if(name){
@@ -179,7 +172,6 @@ function handleLogin(onLogin: (name: string) => void){
     }
     loginForm.addEventListener("submit", subscribe)
 }
-
 
 
 window.addEventListener("load", () => initialize());

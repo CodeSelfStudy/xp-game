@@ -10,7 +10,6 @@ export interface Tileset {
 }
 
 export type RenderContext = {
-    canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
     camera: { position: Vector; viewOffset: Vector; };
     scale: number;

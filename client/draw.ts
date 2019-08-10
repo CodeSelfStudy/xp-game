@@ -24,21 +24,21 @@ export function drawGrid(c: RenderContext, viewOffset: Vector, width: number, he
     let scale = c.scale;
     var n = scale;
     while(true){
-        if(n > c.canvas.width+scale && n > c.canvas.height+scale){
+        if(n > c.ctx.canvas.width+scale && n > c.ctx.canvas.height+scale){
             break;
         }
-        if(scale < c.canvas.width){ 
-            drawGridline(n, 0, n, c.canvas.height);
+        if(scale < c.ctx.canvas.width){ 
+            drawGridline(n, 0, n, c.ctx.canvas.height);
         }
-        if(scale < c.canvas.height){ 
-            drawGridline(0, n, c.canvas.width, n);
+        if(scale < c.ctx.canvas.height){ 
+            drawGridline(0, n, c.ctx.canvas.width, n);
         }
         let localN = Vec.add(vector((n/scale)-1, (n/scale)-1), viewOffset);
         if(localN.x < 0 || localN.x >= width){
-            drawBounds(n-scale, 0, scale, c.canvas.height);
+            drawBounds(n-scale, 0, scale, c.ctx.canvas.height);
         }
         if(localN.y < 0 || localN.y >= height){
-            drawBounds(0, n-scale, c.canvas.width, scale);
+            drawBounds(0, n-scale, c.ctx.canvas.width, scale);
         }
         n += scale;
     }
