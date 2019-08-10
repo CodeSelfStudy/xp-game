@@ -1,8 +1,5 @@
 import { sendAction } from "./server.js";
-import {
-    chatData,
-    initializeChatListener,
-} from "./chat.js";
+import { chatData, initializeChatListener } from "./chat.js";
 import { printMessage, EventType } from './eventBox.js';
 import { vector, Vector } from "./vectors.js"
 import * as Vec from "./vectors.js"
@@ -10,15 +7,24 @@ import { RenderContext, World, Entity, Action, ActionKind } from "./domain.js";
 import { drawRect, drawGrid, drawTile } from "./draw.js"; 
 import { getTileset } from "./tileset.js";
 import { setHealth, setUsername } from "./stats.js";
+import { sanitize } from "./sanitizer.js";
 
 declare var io: any;
 
 async function initialize(){
     var socket = io('/');
-    socket.on('connect', () => {
-        setUsername(socket.id.slice(-7));
-        setHealth(10);
-    });
+
+    function respawn(){
+        handleLogin(name => {
+            setUsername(name)
+            setHealth(0);
+            sendAction(socket, {"kind": "Spawn"});
+        });
+    }
+
+    socket.on('connect', () => respawn());
+    socket.on('despwan', () => respawn());
+        
     const canvas = <HTMLCanvasElement>document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     let world: World = {
@@ -56,7 +62,7 @@ async function initialize(){
         render(getRenderContext(), world);
         let player = world.entities.find(e=> e.client_id == socket.id)
         if(!player){
-            sendAction(socket, {"kind": "Spawn"});
+            respawn();
         }
         else{
             // TODO move to a stat update function
@@ -152,6 +158,28 @@ function handleKeyDown(event: KeyboardEvent): Action | undefined {
     }
     return undefined;
 }
+
+/**
+ * Present the user with a prompt to enter a user name.  On a valid submission,
+ * the prompt is hidden and a the `onLogin` callback is issued with the name
+ */
+function handleLogin(onLogin: (name: string) => void){
+    const loginDiv: HTMLElement = document.getElementById("login");
+    loginDiv.style.display = null;
+    const loginForm: HTMLElement = document.getElementById("loginForm");
+    function subscribe(e){
+        e.preventDefault();
+        const loginFormMessageInput = <HTMLInputElement>document.getElementById("loginFormInput");
+        const name: string = sanitize(loginFormMessageInput.value.trim());
+        if(name){
+            loginForm.removeEventListener("submit", subscribe)
+            loginDiv.style.display = "none";
+            onLogin(name);
+        }
+    }
+    loginForm.addEventListener("submit", subscribe)
+}
+
 
 
 window.addEventListener("load", () => initialize());

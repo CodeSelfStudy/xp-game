@@ -25,19 +25,18 @@ def homepage():
 @socketio.on('connect')
 def handle_connect():
     # Authentication can go here
-    print('hi {}'.format(request.sid))
-    log.game_event('client_connected: {}'.format(request.sid))
+    log.game_event(f'client_connected: {request.sid}')
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    log.game_event('client_disconnected: {}'.format(request.sid))
+    log.game_event(f'client_disconnected: {request.sid}')
     ticker.enqueue_action({'kind': 'Despawn'}, request.sid)
 
 
 @socketio.on('action')
 def handle_action(action):
-    log.game_event('action: {} by {}'.format(action, request.sid))
+    log.game_event(f'action: {action} by {request.sid}')
     ticker.enqueue_action(action, request.sid)
 
 
@@ -53,7 +52,7 @@ def handle_chat(incoming):
             'id': request.sid,
             'body': sanitize(trimmed_message),
         }
-        log.game_event('chat_message: {}'.format(outgoing))
+        log.game_event(f'chat_message: {outgoing}')
         socketio.emit('chat', outgoing)
 
 

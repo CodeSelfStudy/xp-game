@@ -1,6 +1,8 @@
+* { padding: 0; margin: 0; }
+
 .layout {
     display: grid;
-    grid-template-columns: 500px 300px;
+    grid-template-columns: 475px 300px;
     grid-gap: 10px;
     grid-template-areas:
             "view stats"
@@ -20,6 +22,10 @@
     width: 280px;0
 }
 
+.chat {
+    grid-area: chat;
+}
+
 .stats-item {
     padding: 1px 4px;
 }
@@ -28,21 +34,19 @@
     margin-left: 20px
 }
 
-
-.chat {
-    grid-area: chat;
-}
-
-
 #chat {
     outline: #ccc 1px solid;
     padding: 7px;
     height: 250px;
     width: 750px;
     margin: 17px auto;
+}
+
+.text {
     font-family: monospace;
     color: #333;
 }
+
 .messages {
     /* outline: blue 1px solid; */
     height: 200px;
@@ -62,6 +66,35 @@
 }
 .chat-form input[type="submit"] {
     width: 58px;
+}
+
+#login {
+    background-color: #cfc6b8;
+    position: relative;
+    top: 120px;
+    left: 25px;
+    height: 150px;
+    width: 400px;
+    border-radius: 10px;
+}
+
+#login h1, .login-form {
+    margin: 10px;
+}
+
+.login-form {
+    position: relative;
+    height: 50px;
+}
+.login-form input {
+    height: 48px;
+}
+.login-form input[type="text"] {
+    width: 250px;
+    padding-left: 7px;
+}
+.login-form input[type="submit"] {
+    width: 100px;
 }
 .message {
     border-bottom: 1px solid #333;

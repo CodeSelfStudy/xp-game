@@ -25,9 +25,9 @@ game_state = World(
 socket_server = None
 
 
-def emit(channel, data):
+def emit(channel, data, room=None):
     if socket_server:
-        socket_server.emit(channel, to_dict(data))
+        socket_server.emit(channel, to_dict(data), room=room)
 
 
 def enqueue_action(action_message, client_id):
@@ -129,6 +129,7 @@ def despawn_entity(client_id):
     entity = game_state.get_entity_by_id(client_id)
     if entity:
         game_state.entities.remove(entity)
+        emit('despawn', {})
 
 
 def run_ticker(socketio):
