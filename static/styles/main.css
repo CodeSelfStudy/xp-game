@@ -1,5 +1,13 @@
 * { padding: 0; margin: 0; }
 
+th.controls {
+    text-align: left;
+}
+
+th.wide {
+    width: 50%;
+}
+
 .layout {
     display: grid;
     grid-template-columns: 475px 300px;
