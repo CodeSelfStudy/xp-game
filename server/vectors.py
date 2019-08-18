@@ -1,5 +1,5 @@
 from itertools import takewhile
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 from .domain import Vector
 
 
@@ -32,11 +32,20 @@ def raycast(start: Vector,
             direction: Vector,
             max_dist: int = 10,
             predicate: Callable[[Vector], bool] = lambda x: True
-            ) -> List[Vector]:
+            ) -> Tuple[Optional[Vector], List[Vector]]:
     """
     Cast a ray starting from position `start` in Vector `direction`.
-    Return a list of positions (Vectors) to a max distance of `maxDist`
-    or until `predicate` is satisfied
+    Return a tuple (hit, positions) where `hit` is the first Vector position
+    that fails the `predicate`, and positions is a list of positions (Vectors)
+    to a max distance of `maxDist` that pass the predicate
     """
-    return list(takewhile(predicate, [add(start, multiply(direction, i + 1))
-                                      for i in range(max_dist)]))
+    ray = (add(start, multiply(direction, i + 1)) for i in range(max_dist))
+    hit = None
+    ray_path = []
+    for e in ray:
+        if predicate(e):
+            ray_path.append(e)
+        else:
+            hit = e
+            break
+    return (hit, ray_path)

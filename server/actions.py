@@ -71,10 +71,10 @@ def perform_dash(action: Action, ctx: Context) -> None:
     step_dir = vec.dir_to_vec(direction)
     if not step_dir:
         return None
-    destination = vec.raycast(entity.position, step_dir, max_dist=2,
-                              predicate=ctx.logic_grid.is_passable)
-    if destination:
-        ctx.logic_grid.move_entity(entity, destination[-1])
+    _, path = vec.raycast(entity.position, step_dir, max_dist=2,
+                          predicate=ctx.logic_grid.is_passable)
+    if path:
+        ctx.logic_grid.move_entity(entity, path[-1])
 
 
 def perform_aimed_shot(action: Action, ctx: Context) -> None:
@@ -82,9 +82,10 @@ def perform_aimed_shot(action: Action, ctx: Context) -> None:
     step = vec.dir_to_vec(direction)
     if not step:
         return None
-    target_pos = vec.raycast(entity.position, step, max_dist=3,
-                             predicate=ctx.logic_grid.is_passable)
-    loc = ctx.logic_grid.get_location(target_pos[-1]) if target_pos else None
+    hit, path = vec.raycast(entity.position, step, max_dist=3,
+                            predicate=ctx.logic_grid.is_passable)
+    loc = (ctx.logic_grid.get_location(hit)
+           if hit and ctx.logic_grid.world.in_bounds(hit) else None)
     if loc and loc.entity:
         target = loc.entity
         result = (f"They strike {ctx.user_data.get(target.client_id)}, "
