@@ -18,6 +18,7 @@ export function subtract(a: V2, b: V2): V2 {
         y: a.y - b.y
     }
 }
+export function multiply(a: V2, scalar: number) { return vector(a.x*scalar, a.y*scalar); }
 export function zero(): V2 { return vector(0, 0); }
 export function up(){ return vector(0, -1); }
 export function down(){ return vector(0, 1); }

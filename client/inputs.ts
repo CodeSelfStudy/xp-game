@@ -3,22 +3,36 @@
  */
 import { Action, ActionKind } from "./domain.js";
 
-let ATK_PRESSED = false;
+let KeyBindings = new Map<string, ActionKind>([
+    ["a", "Attack"],
+    ["q", "Dash"],
+    ["w", "Aimed Shot"]
+]);
 
-export function handleKeyPress(event: KeyboardEvent){
-    switch (event.key){
-        case "a":
-        case "A":
-            ATK_PRESSED = true;
-            break;
-    }
+export function initializeInputListeners(keyDownCallback: (arg: Action) => void) {
+    let secondaryInput: { key: ActionKind | undefined  } = { key: undefined };
+    document.addEventListener("keydown", (e) => {
+        let input = handleKeyDown(e, secondaryInput);
+        if(input){
+            keyDownCallback(input);
+        }
+    }, false);
+    document.addEventListener("keypress", (e) => {
+        secondaryInput.key = handleKeyPress(e);
+    }, false);
+    document.addEventListener("keyup", handleKeyUp);
 }
 
-export function handleKeyDown(event: KeyboardEvent): Action | undefined {
-    // if the attack button has been pressed, set the action to Attack
-    // and clear the ATK_PRESSED input state
-    let action: ActionKind = ATK_PRESSED ? "Attack" : "Move";
-    ATK_PRESSED = false;
+
+
+function handleKeyPress(event: KeyboardEvent): ActionKind | undefined {
+    return KeyBindings.get(event.key);
+}
+
+function handleKeyDown(event: KeyboardEvent, secondaryInput?: { key: ActionKind }): Action | undefined {
+    // if a secondary input is set, perform that action and then clear the secondary input state
+    let action: ActionKind = secondaryInput.key || "Move";
+    secondaryInput.key = undefined;
 
     switch (event.key) {
         case "ArrowLeft":
@@ -37,7 +51,7 @@ export function handleKeyDown(event: KeyboardEvent): Action | undefined {
     return undefined;
 }
 
-export function handleKeyUp(event: KeyboardEvent): void {
+function handleKeyUp(event: KeyboardEvent): void {
     switch (event.key) {
         case "Enter":
             event.preventDefault();

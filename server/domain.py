@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Union, Optional
 from dataclasses import dataclass
 
 
@@ -21,9 +21,17 @@ class Entity:
 @dataclass(frozen=True)
 class Action:
     """An action in the game world undertaken by a specific entity"""
-    client_id: str
-    kind: str  # Move | Attack | Spawn | Despawn
-    direction: str  # North | South | East | West
+    entity: Entity
+    kind: str  # Move | Attack | Spawn | Despawn | Dash
+    direction: Optional[str]  # North | South | East | West
+
+
+@dataclass(frozen=True)
+class Ability:
+    kind: str  # Move | Attack | Dash
+    color: str
+    reach: int
+    damage: Optional[int] = None
 
 
 @dataclass(frozen=True)

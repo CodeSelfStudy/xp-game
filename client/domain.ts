@@ -16,26 +16,34 @@ export type RenderContext = {
     tileset: Tileset;
 }
 
+export type ActionKind = "Move" | "Attack" | "Spawn" | "Dash" | "Aimed Shot"; 
 
-export type ActionKind = "Move" | "Attack" | "Spawn";
-export type Action = { direction?: Direction, kind: ActionKind }
+export type Action = {
+    entity?: Entity;
+    kind: ActionKind;
+    direction?: Direction;
+}
+
+export type Ability = {
+    color: string;
+    reach: number; 
+}
 
 
 export type World = {
     width: number;
     height: number;
     entities: Entity[];
-    tile_grid: Tile[][]
+    tile_grid: Tile[][];
 }
 
 export type Entity = {
     position: Vector;
     client_id: string;
-    current_action?: Action;
     health: number;
+    currentAction?: { action: Action, ability: Ability };
 }
 
-
 export type Tile = {
-    tile_id: string
+    tile_id: string;
 }

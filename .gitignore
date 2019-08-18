@@ -18,6 +18,7 @@ tags.*
 *.py[cod]
 __pycache__/
 .venv/
+.mypy_cache/
 
 # Node
 node_modules/

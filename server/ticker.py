@@ -1,20 +1,19 @@
-import queue
+from queue import Queue
 import time
 from random import randint
-from collections import defaultdict
-from typing import Callable, Dict
+from typing import Callable, Dict, Any
 from .utils import to_dict
 from .domain import Entity, Action, Vector
 from .world import World, LogicGrid
 from .environment import generate_random_map
-from . import vectors as vec
+from .actions import perform_ability, Context, allowed_actions, abilities
 
 
 TICK_INTERVAL = 1
 WORLD_WIDTH = 10
 WORLD_HEIGHT = 10
 
-action_queue = queue.Queue()
+action_queue: Any = Queue()
 
 game_state = World(
     width=WORLD_WIDTH,
@@ -25,7 +24,7 @@ game_state = World(
 
 
 socket_server = None
-user_map: Dict[str, str]
+user_data: Dict[str, str]
 
 
 def emit(channel, data, room=None):
@@ -36,88 +35,51 @@ def emit(channel, data, room=None):
 def enqueue_action(action_message, client_id):
     if not action_message or 'kind' not in action_message:
         return
-    action = Action(client_id=client_id,
-                    kind=action_message.get('kind'),
-                    direction=action_message.get('direction'))
-    action_queue.put(action)
-
-    # if the action should be telegraphed between ticks, broadcast it
-    if action.kind in {"Attack", "Move"}:
-        entity = game_state.get_entity_by_id(action.client_id)
+    kind = action_message['kind']
+    if kind == 'Despawn':
+        despawn_entity(client_id)
+    elif kind == 'Spawn':
+        spawn_entity(client_id)
+    elif kind in allowed_actions:
+        entity = game_state.get_entity_by_id(client_id)
         if entity:
-            emit('view', {'entity': entity, 'action': action})
+            action = Action(entity=entity,
+                            kind=kind,
+                            direction=action_message.get('direction'))
+            action_queue.put(action)
+            emit('view', {
+                'action': action,
+                'ability': abilities.get(action.kind)
+            })
 
 
 def process_tick():
-    action_filter: dict[str, Action] = {}
+    action_filter: Dict[str, Action] = {}
     while not action_queue.empty():
         # filter to a single action per user
         a = action_queue.get(block=True)
-        action_filter[a.client_id] = a
-
-    # group actions by kind
-    actions: dict[str, list[Action]] = defaultdict(list)
-    for a in action_filter.values():
-        actions[a.kind].append(a)
+        if not a.entity:
+            continue
+        action_filter[a.entity.client_id] = a
 
     logic_grid = LogicGrid.get_logic_grid(game_state)
 
-    def perform_on_logic_grid(
-            func: Callable[[Action, str, LogicGrid], None],
+    def perform_with_context(
+            func: Callable[[Action, Context], None],
             action: Action) -> None:
-        entity = game_state.get_entity_by_id(action.client_id)
-        if entity:
-            func(entity, action.direction, logic_grid)
+        context = Context(logic_grid=logic_grid,
+                          user_data=user_data,
+                          socket=socket_server)
+        if action.entity:
+            func(action, context)
 
-    # Process actions in order of Despawn -> Move -> Attack -> Spawn
-    for a in actions.get('Despawn', []):
-        despawn_entity(a.client_id)
-
-    for a in actions.get('Move', []):
-        perform_on_logic_grid(perform_move, a)
-
-    for a in actions.get('Attack', []):
-        perform_on_logic_grid(perform_action, a)
-
-    for a in actions.get('Spawn', []):
-        spawn_entity(a.client_id)
+    for a in action_filter.values():
+        if a.kind in allowed_actions:
+            perform_with_context(perform_ability, a)
 
     for e in game_state.entities:
         if e.health <= 0:
             despawn_entity(e.client_id)
-
-
-def perform_move(entity: Entity, direction: str, logic_grid: LogicGrid):
-    step = vec.dir_to_vec(direction)
-    destination = vec.add(step, entity.position) if step else None
-
-    if destination and logic_grid.is_passable(destination):
-        logic_grid.move_entity(entity, destination)
-
-
-def perform_action(entity: Entity, direction: str, logic_grid: LogicGrid):
-    # TODO cache making the grid per frame, and make available to actions
-    step = vec.dir_to_vec(direction)
-    target_pos = vec.add(step, entity.position) if step else None
-
-    loc = (logic_grid.get_location(target_pos)
-           if logic_grid.world.in_bounds(target_pos) else None)
-
-    if loc and loc.entity:
-        target = loc.entity
-        result = (f"They strike {user_data.get(target.client_id)}, "
-                  + "dealing 1 damage.")
-        target.health -= 1
-    else:
-        result = "They miss."
-
-    event = {
-        'id': "",
-        # TODO - replace the sliced client id with a name
-        'body': f"""{user_data.get(entity.client_id)} swings their vorpal """
-                f"""sword to the {direction}. {result}"""
-    }
-    socket_server.emit('chat', event)
 
 
 def spawn_entity(client_id):

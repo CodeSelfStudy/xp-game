@@ -3,20 +3,20 @@ import { chatData, initializeChatListener } from "./chat.js";
 import { printMessage, EventType } from './eventBox.js';
 import { vector, Vector } from "./vectors.js"
 import * as Vec from "./vectors.js"
-import { RenderContext, World, Entity, Action } from "./domain.js";
+import { RenderContext, World, Ability, Action } from "./domain.js";
 import { drawRect, drawGrid, drawTile } from "./draw.js";
 import { getTileset } from "./tileset.js";
 import { setHealth, setUsername } from "./stats.js";
 import { sanitize } from "./sanitizer.js";
-import { handleKeyDown, handleKeyUp, handleKeyPress } from "./inputs.js";
+import { initializeInputListeners } from "./inputs.js";
 
 declare var io: any;
 
 async function initialize(){
     // TODO: loading tiles blocks initialization; put this behind a load screen?
     const tileset = await getTileset();
-
     var socket = io('/');
+    initializeInputListeners((input) => sendAction(socket, input));
     function respawn(){
         handleLogin(name => {
             setUsername(name);
@@ -49,13 +49,6 @@ async function initialize(){
         };
     };
 
-    document.addEventListener("keydown", (e) => {
-        let input = handleKeyDown(e);
-        if(input){sendAction(socket, input)}
-    }, false);
-    document.addEventListener("keyup", (e) => { handleKeyUp(e) });
-    document.addEventListener("keypress", handleKeyPress, false);
-
     socket.on('world', (state: World) => {
         world = state;
         render(getRenderContext(), world);
@@ -70,10 +63,10 @@ async function initialize(){
     // Boot the chat system
     initializeChatListener(socket);
     // listen for mid-update actions performed by other players
-    socket.on('view', (actionEvent: { entity: Entity, action: Action }) => {
-        let entity = world.entities.find(e=> e.client_id == actionEvent.entity.client_id);
+    socket.on('view', (actionEvent: { action: Action, ability: Ability }) => {
+        let entity = world.entities.find(e=> e.client_id == actionEvent.action.entity.client_id);
         if(entity){
-            entity.current_action = actionEvent.action;
+            entity.currentAction = actionEvent;
         }
         render(getRenderContext(), world);
     });
@@ -109,12 +102,14 @@ function render(c: RenderContext, world: World) {
         let localPos = worldToView(e.position);
         drawTile(c, localPos, "hero");
         // TODO - split action rendering into a separate layer
-        if(e.current_action){
-            let actionColor = e.current_action.kind == "Move"
-                ? "blue"
-                : "red";
-            let actionTarget = Vec.add(e.position, Vec.dirToVec(e.current_action.direction));
-            drawRect(c, worldToView(actionTarget), {strokeColor:actionColor});
+        if(e.currentAction){
+            console.log(e.currentAction)
+            let dir = Vec.dirToVec(e.currentAction.action.direction);
+            let range = e.currentAction.ability.reach;
+            for(var i = 1; i <= range; i++){
+                let actionTarget = Vec.add(e.position, Vec.multiply(dir, i)) 
+                drawRect(c, worldToView(actionTarget), {strokeColor: e.currentAction.ability.color});
+            }
         }
     });
 }

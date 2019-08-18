@@ -1,7 +1,9 @@
+from itertools import takewhile
+from typing import Callable, List, Optional
 from .domain import Vector
 
 
-def dir_to_vec(direction: str):
+def dir_to_vec(direction: str) -> Optional[Vector]:
     """Convert a cardinal direction to a vector"""
     dir_vec_map = {
         # TODO - handle flipping the orientation to "Screen Space" on the
@@ -20,3 +22,21 @@ def add(a: Vector, b: Vector) -> Vector:
 
 def subtract(a: Vector, b: Vector) -> Vector:
     return Vector(a.x - b.x, a.y - a.y)
+
+
+def multiply(a: Vector, scalar: int):
+    return Vector(a.x * scalar, a.y * scalar)
+
+
+def raycast(start: Vector,
+            direction: Vector,
+            max_dist: int = 10,
+            predicate: Callable[[Vector], bool] = lambda x: True
+            ) -> List[Vector]:
+    """
+    Cast a ray starting from position `start` in Vector `direction`.
+    Return a list of positions (Vectors) to a max distance of `maxDist`
+    or until `predicate` is satisfied
+    """
+    return list(takewhile(predicate, [add(start, multiply(direction, i + 1))
+                                      for i in range(max_dist)]))

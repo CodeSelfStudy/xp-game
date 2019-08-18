@@ -7,6 +7,7 @@ from server.logger import create_logger
 import server.ticker as ticker
 from server.domain import ClientEvent
 from server.utils import from_dict
+from server.actions import allowed_actions
 
 
 log = create_logger(__name__)
@@ -32,7 +33,7 @@ def handle_connect():
     # Authentication can go here
     log.game_event(f'client_connected: {request.sid}')
 
-    
+
 @socketio.on('disconnect')
 def handle_disconnect():
     log.game_event(f'client_disconnected: {request.sid}')
@@ -55,7 +56,6 @@ def handle_event(event_dict):
 
 @socketio.on('action')
 def handle_action(action):
-    allowed_actions = {'Attack', 'Move'}
     if action['kind'] in allowed_actions:
         log.game_event(f'action: {action} by {request.sid}')
         ticker.enqueue_action(action, request.sid)
