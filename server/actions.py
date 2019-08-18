@@ -15,7 +15,7 @@ class Context:
 allowed_actions = {'Attack', 'Move', 'Dash', 'Aimed Shot'}
 abilities: Dict[str, Ability] = {
     'Attack': Ability(kind="Attack", color="red",
-                      reach=1, damage=1),
+                      reach=1, damage=2),
     'Aimed Shot': Ability(kind="Aimed Shot", color="red",
                           reach=3, damage=1),
     'Move':   Ability(kind="Move", color="blue", reach=1),
@@ -43,6 +43,7 @@ def perform_move(action: Action, ctx: Context) -> None:
 
 
 def perform_attack(action: Action, ctx: Context) -> None:
+    ability = abilities.get(action.kind)
     entity, direction = action.entity, action.direction
     step = vec.dir_to_vec(direction)
     target_pos = vec.add(step, entity.position) if step else None
@@ -53,8 +54,8 @@ def perform_attack(action: Action, ctx: Context) -> None:
     if loc and loc.entity:
         target = loc.entity
         result = (f"They strike {ctx.user_data.get(target.client_id)}, "
-                  "dealing 1 damage.")
-        target.health -= 1
+                  f"dealing {ability.damage} damage.")
+        target.health -= ability.damage
     else:
         result = "They miss."
 
@@ -67,36 +68,38 @@ def perform_attack(action: Action, ctx: Context) -> None:
 
 
 def perform_dash(action: Action, ctx: Context) -> None:
+    ability = abilities.get(action.kind)
     entity, direction = action.entity, action.direction
     step_dir = vec.dir_to_vec(direction)
     if not step_dir:
         return None
-    _, path = vec.raycast(entity.position, step_dir, max_dist=2,
+    _, path = vec.raycast(entity.position, step_dir, max_dist=ability.reach,
                           predicate=ctx.logic_grid.is_passable)
     if path:
         ctx.logic_grid.move_entity(entity, path[-1])
 
 
 def perform_aimed_shot(action: Action, ctx: Context) -> None:
+    ability = abilities.get(action.kind)
     entity, direction = action.entity, action.direction
     step = vec.dir_to_vec(direction)
     if not step:
         return None
-    hit, path = vec.raycast(entity.position, step, max_dist=3,
+    hit, path = vec.raycast(entity.position, step, max_dist=ability.reach,
                             predicate=ctx.logic_grid.is_passable)
     loc = (ctx.logic_grid.get_location(hit)
            if hit and ctx.logic_grid.world.in_bounds(hit) else None)
     if loc and loc.entity:
         target = loc.entity
         result = (f"They strike {ctx.user_data.get(target.client_id)}, "
-                  "dealing 1 damage.")
-        target.health -= 1
+                  f"dealing {ability.damage} damage.")
+        target.health -= ability.damage
     else:
         result = "They miss."
 
     event = {
         'id': "",
-        'body': f"""{ctx.user_data.get(entity.client_id)} draws their """
-                f"""bow, aiming to the {direction}. {result}"""
+        'body': f"{ctx.user_data.get(entity.client_id)} draws their "
+                f"bow, aiming to the {direction}. {result}"
     }
     ctx.socket.emit('chat', event)
