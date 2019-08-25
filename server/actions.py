@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict
+from typing import Dict, Callable, Optional
 from .domain import Ability, Action
 from .world import LogicGrid
 from . import vectors as vec
@@ -12,26 +12,42 @@ class Context:
     socket: any
 
 
+PartialAction = Callable[[Action, Context], Optional['PartialAction']]
+
+
 allowed_actions = {'Attack', 'Move', 'Dash', 'Aimed Shot'}
 abilities: Dict[str, Ability] = {
     'Attack': Ability(kind="Attack", color="red",
-                      reach=1, damage=2),
+                      reach=1, damage=2, delay=10),
     'Aimed Shot': Ability(kind="Aimed Shot", color="red",
-                          reach=3, damage=1),
-    'Move':   Ability(kind="Move", color="blue", reach=1),
-    'Dash':   Ability(kind="Dash", color="blue", reach=2),
+                          reach=3, damage=1, delay=15),
+    'Move':   Ability(kind="Move", color="blue", reach=1, delay=5),
+    'Dash':   Ability(kind="Dash", color="blue", reach=2, delay=10),
 }
 
 
-def perform_ability(action: Action, ctx: Context) -> None:
-    if action.kind == "Move":
-        return perform_move(action, ctx)
-    if action.kind == "Attack":
-        return perform_attack(action, ctx)
-    if action.kind == "Dash":
-        return perform_dash(action, ctx)
-    if action.kind == "Aimed Shot":
-        return perform_aimed_shot(action, ctx)
+def perform_ability(action: Action, ctx: Context) -> PartialAction:
+    ability = abilities[action.kind]
+
+    duration = ability.delay
+
+    def execute_action(a: Action, c: Context):
+        if a.kind == "Move":
+            return perform_move(a, c)
+        if a.kind == "Attack":
+            return perform_attack(a, c)
+        if a.kind == "Dash":
+            return perform_dash(a, c)
+        if a.kind == "Aimed Shot":
+            return perform_aimed_shot(a, c)
+
+    def wait(a: Action, c: Context) -> PartialAction:
+        nonlocal duration
+        if duration > 0:
+            duration -= 1
+            return wait
+        return execute_action(a, c)
+    return wait(action, ctx)
 
 
 def perform_move(action: Action, ctx: Context) -> None:

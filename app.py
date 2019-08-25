@@ -45,7 +45,7 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     log.game_event(f'client_disconnected: {request.sid}')
-    ticker.enqueue_action({'kind': 'Despawn'}, request.sid)
+    ticker.enqueue_client_message({'kind': 'Despawn'}, request.sid)
 
 
 @socketio.on('event')
@@ -59,14 +59,14 @@ def handle_event(event_dict):
     if event and event.kind == ClientEvent.LOGIN_EVENT_KIND:
         # TODO-- get from_dict to parse recursively
         client_names[request.sid] = event.detail['character_name']
-        ticker.enqueue_action({'kind': 'Spawn'}, request.sid)
+        ticker.enqueue_client_message({'kind': 'Spawn'}, request.sid)
 
 
 @socketio.on('action')
 def handle_action(action):
     if action['kind'] in allowed_actions:
         log.game_event(f'action: {action} by {request.sid}')
-        ticker.enqueue_action(action, request.sid)
+        ticker.enqueue_client_message(action, request.sid)
 
 
 @socketio.on('chat')

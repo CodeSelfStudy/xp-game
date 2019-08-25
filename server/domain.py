@@ -31,6 +31,7 @@ class Ability:
     kind: str  # Move | Attack | Dash
     color: str
     reach: int
+    delay: int
     damage: Optional[int] = None
 
 
