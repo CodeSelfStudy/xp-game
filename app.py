@@ -7,7 +7,6 @@ from server.logger import create_logger
 import server.ticker as ticker
 from server.domain import ClientEvent
 from server.utils import from_dict
-from server.actions import allowed_actions
 from server.assets import cache_buster
 
 
@@ -64,9 +63,8 @@ def handle_event(event_dict):
 
 @socketio.on('action')
 def handle_action(action):
-    if action['kind'] in allowed_actions:
-        log.game_event(f'action: {action} by {request.sid}')
-        ticker.enqueue_client_message(action, request.sid)
+    log.game_event(f'action: {action} by {request.sid}')
+    ticker.enqueue_client_message(action, request.sid)
 
 
 @socketio.on('chat')

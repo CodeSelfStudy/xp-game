@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Callable, Optional
+from typing import Dict, Generator, Any, Tuple
 from .domain import Ability, Action
 from .world import LogicGrid
 from . import vectors as vec
@@ -9,13 +9,12 @@ from . import vectors as vec
 class Context:
     logic_grid: LogicGrid
     user_data: Dict[str, str]
-    socket: any
+    socket: Any
 
 
-PartialAction = Callable[[Action, Context], Optional['PartialAction']]
+ActionFrame = Tuple[Action, Context]
+ActionRoutine = Generator[None, ActionFrame, None]
 
-
-allowed_actions = {'Attack', 'Move', 'Dash', 'Aimed Shot'}
 abilities: Dict[str, Ability] = {
     'Attack': Ability(kind="Attack", color="red",
                       reach=1, damage=2, delay=10),
@@ -26,9 +25,8 @@ abilities: Dict[str, Ability] = {
 }
 
 
-def perform_ability(action: Action, ctx: Context) -> PartialAction:
+def perform_ability(action: Action) -> ActionRoutine:
     ability = abilities[action.kind]
-
     duration = ability.delay
 
     def execute_action(a: Action, c: Context):
@@ -41,13 +39,12 @@ def perform_ability(action: Action, ctx: Context) -> PartialAction:
         if a.kind == "Aimed Shot":
             return perform_aimed_shot(a, c)
 
-    def wait(a: Action, c: Context) -> PartialAction:
-        nonlocal duration
-        if duration > 0:
-            duration -= 1
-            return wait
-        return execute_action(a, c)
-    return wait(action, ctx)
+    while duration > 0:
+        # yield until the duration has expired
+        _ = (yield)
+        duration -= 1
+    a, c = (yield)
+    execute_action(a, c)
 
 
 def perform_move(action: Action, ctx: Context) -> None:
@@ -59,10 +56,10 @@ def perform_move(action: Action, ctx: Context) -> None:
 
 
 def perform_attack(action: Action, ctx: Context) -> None:
-    ability = abilities.get(action.kind)
+    ability = abilities["Attack"]
     entity, direction = action.entity, action.direction
     step = vec.dir_to_vec(direction)
-    target_pos = vec.add(step, entity.position) if step else None
+    target_pos = vec.add(step, entity.position)
 
     loc = (ctx.logic_grid.get_location(target_pos)
            if ctx.logic_grid.world.in_bounds(target_pos) else None)
@@ -71,7 +68,7 @@ def perform_attack(action: Action, ctx: Context) -> None:
         target = loc.entity
         result = (f"They strike {ctx.user_data.get(target.client_id)}, "
                   f"dealing {ability.damage} damage.")
-        target.health -= ability.damage
+        target.health -= ability.damage or 0
     else:
         result = "They miss."
 
@@ -84,7 +81,7 @@ def perform_attack(action: Action, ctx: Context) -> None:
 
 
 def perform_dash(action: Action, ctx: Context) -> None:
-    ability = abilities.get(action.kind)
+    ability = abilities['Dash']
     entity, direction = action.entity, action.direction
     step_dir = vec.dir_to_vec(direction)
     if not step_dir:
@@ -96,7 +93,7 @@ def perform_dash(action: Action, ctx: Context) -> None:
 
 
 def perform_aimed_shot(action: Action, ctx: Context) -> None:
-    ability = abilities.get(action.kind)
+    ability = abilities["Aimed Shot"]
     entity, direction = action.entity, action.direction
     step = vec.dir_to_vec(direction)
     if not step:
@@ -109,7 +106,7 @@ def perform_aimed_shot(action: Action, ctx: Context) -> None:
         target = loc.entity
         result = (f"They strike {ctx.user_data.get(target.client_id)}, "
                   f"dealing {ability.damage} damage.")
-        target.health -= ability.damage
+        target.health -= ability.damage or 0
     else:
         result = "They miss."
 

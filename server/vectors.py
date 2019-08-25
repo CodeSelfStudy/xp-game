@@ -3,7 +3,7 @@ from typing import Callable, List, Optional, Tuple
 from .domain import Vector
 
 
-def dir_to_vec(direction: str) -> Optional[Vector]:
+def dir_to_vec(direction: str) -> Vector:
     """Convert a cardinal direction to a vector"""
     dir_vec_map = {
         # TODO - handle flipping the orientation to "Screen Space" on the
@@ -13,7 +13,7 @@ def dir_to_vec(direction: str) -> Optional[Vector]:
         "East": Vector(1, 0),
         "West": Vector(-1, 0),
     }
-    return dir_vec_map.get(direction)
+    return dir_vec_map.get(direction, Vector(0, 0))
 
 
 def add(a: Vector, b: Vector) -> Vector:

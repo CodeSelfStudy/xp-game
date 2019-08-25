@@ -23,7 +23,7 @@ class Action:
     """An action in the game world undertaken by a specific entity"""
     entity: Entity
     kind: str  # Move | Attack | Spawn | Despawn | Dash
-    direction: Optional[str]  # North | South | East | West
+    direction: str = ""  # North | South | East | West
 
 
 @dataclass(frozen=True)

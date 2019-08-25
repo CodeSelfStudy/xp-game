@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import List, Optional
 from .domain import Entity, Vector
 
@@ -55,19 +55,19 @@ class LogicGrid:
     world: World
     grid: List[List[Location]]
 
+    @staticmethod
     def get_logic_grid(world: World) -> "LogicGrid":
         """
         Derive a 2D grid of Locations. The outer list is
         the y coordinate, and the inner is the x coordinate (think rows
         and columns)
         """
-        grid: List[List[Entity]] = []
+        grid: List[List[Location]] = []
         for y in range(world.width):
             grid.append([])
             for x in range(world.height):
-                grid[y].append([])
-                grid[y][x] = Location(tile=world.get_tile(Vector(x, y)),
-                                      entity=None)
+                grid[y].append(Location(tile=world.get_tile(Vector(x, y)),
+                                        entity=None))
 
         for e in world.entities:
             grid[e.position.y][e.position.x].entity = e
