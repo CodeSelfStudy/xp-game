@@ -1,11 +1,6 @@
 from typing import Union, Optional
 from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
-class Vector:
-    x: int
-    y: int
+from .vectors import Vector
 
 
 @dataclass

@@ -2,8 +2,10 @@ from queue import Queue
 import time
 from random import randint
 from typing import Dict, Optional, Tuple, List
-from .utils import to_dict
-from .domain import Entity, Action, Vector
+from server.utilities.serialize import to_dict
+from server.domain.entity import Entity
+from server.domain.vectors import Vector
+from server.domain.messages import Action
 from .world import World, LogicGrid
 from .environment import generate_random_map
 from .actions import perform_ability, Context, abilities, ActionRoutine

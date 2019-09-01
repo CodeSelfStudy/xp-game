@@ -1,6 +1,11 @@
-from itertools import takewhile
+from dataclasses import dataclass
 from typing import Callable, List, Optional, Tuple
-from .domain import Vector
+
+
+@dataclass(frozen=True)
+class Vector:
+    x: int
+    y: int
 
 
 def dir_to_vec(direction: str) -> Vector:

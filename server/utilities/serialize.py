@@ -1,6 +1,6 @@
 import json
 from typing import Dict
-from server.logger import create_logger
+from .logger import create_logger
 
 log = create_logger(__name__)
 

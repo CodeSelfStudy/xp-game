@@ -1,8 +1,17 @@
 from dataclasses import dataclass
-from typing import Dict, Generator, Any, Tuple
-from .domain import Ability, Action
+from typing import Dict, Generator, Any, Tuple, Optional
+from server.domain.messages import Action
+from server.domain import vectors as vec
 from .world import LogicGrid
-from . import vectors as vec
+
+
+@dataclass(frozen=True)
+class Ability:
+    kind: str  # Move | Attack | Dash
+    color: str
+    reach: int
+    delay: int
+    damage: Optional[int] = None
 
 
 @dataclass(frozen=True)
