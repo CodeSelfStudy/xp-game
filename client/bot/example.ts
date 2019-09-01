@@ -7,16 +7,17 @@ import { initialize, AiContext } from "./base.js";
  * every so often.
  */
 
-function direction(): Direction{
-    let index = Math.floor(Math.random() * 4);
-    let direction: Direction[] = ["North", "East", "West", "South"];
-    return direction[index];
-}
 
 function update(context: AiContext){
-    var rand = Math.random();
-    var kind: ActionKind = Math.random() >= 0.5 ? "Move" : "Attack";
+    function direction(): Direction{
+        let index = Math.floor(Math.random() * 4);
+        let direction: Direction[] = ["North", "East", "West", "South"];
+        return direction[index];
+    }
+
+    let rand = Math.random();
     if(rand > 0.90){
+        let kind: ActionKind = Math.random() >= 0.5 ? "Move" : "Attack";
         context.act({kind: kind, direction: direction()});
     }
 }
