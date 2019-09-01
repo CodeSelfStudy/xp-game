@@ -1,6 +1,6 @@
-import { RenderContext } from "./domain.js";
-import { Vector, vector } from "./vectors.js";
-import * as Vec from "./vectors.js";
+import { RenderContext } from "../common/domain.js";
+import { Vector, vector } from "../common/vectors.js";
+import * as Vec from "../common/vectors.js";
  
 
 export function drawGrid(c: RenderContext, viewOffset: Vector, width: number, height: number){

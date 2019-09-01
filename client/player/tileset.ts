@@ -1,4 +1,4 @@
-import { Tileset } from "./domain";
+import { Tileset } from "../common/domain";
 
 
 export async function getTileset(): Promise<Tileset> {

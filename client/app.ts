@@ -1,14 +1,14 @@
-import { sendAction, requestLogin } from "./server.js";
-import { chatData, initializeChatListener } from "./chat.js";
-import { printMessage, EventType } from './eventBox.js';
-import { vector, Vector } from "./vectors.js"
-import * as Vec from "./vectors.js"
-import { RenderContext, World, Ability, Action } from "./domain.js";
-import { drawRect, drawGrid, drawTile } from "./draw.js";
-import { getTileset } from "./tileset.js";
-import { setHealth, setUsername } from "./stats.js";
-import { sanitize } from "./sanitizer.js";
-import { initializeInputListeners } from "./inputs.js";
+import { vector, Vector } from "./common/vectors.js";
+import * as Vec from "./common/vectors.js";
+import { sendAction, requestLogin } from "./common/server.js";
+import { RenderContext, World, Ability, Action } from "./common/domain.js";
+import { chatData, initializeChatListener } from "./player/chat.js";
+import { printMessage, EventType } from './player/eventBox.js';
+import { drawRect, drawGrid, drawTile } from "./player/draw.js";
+import { getTileset } from "./player/tileset.js";
+import { setHealth, setUsername } from "./player/stats.js";
+import { sanitize } from "./player/sanitizer.js";
+import { initializeInputListeners } from "./player/inputs.js";
 
 declare var io: any;
 

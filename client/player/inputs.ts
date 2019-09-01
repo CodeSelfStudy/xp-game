@@ -1,7 +1,7 @@
 /**
  * This module handles key presses.
  */
-import { Action, ActionKind } from "./domain.js";
+import { Action, ActionKind } from "../common/domain.js";
 
 let KeyBindings = new Map<string, ActionKind>([
     ["a", "Attack"],

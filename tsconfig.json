@@ -6,6 +6,12 @@
     "outDir": "./server/static/dist/"
   },
   "include": [
-     "./client/**/*"
+     "./client/*",
+     "./client/player/*",
+     "./client/common/*"
+  ],
+  "exclude":[
+   "./client/bots/*",
+    "node_modules"
   ]
 }

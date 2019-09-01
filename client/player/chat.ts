@@ -3,7 +3,7 @@
  *
  * Updating the DOM is handled in the eventBox module.
  */
-import { sendChatMessage } from "./server.js";
+import { sendChatMessage } from "../common/server.js";
 import { printMessage, EventType } from './eventBox.js';
 
 // Represents a chat message

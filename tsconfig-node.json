@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+    "target": "es6",
+    "module": "commonjs",
+    "outDir": "./build/"
+  },
+  "include": [
+     "./client/**/*"
+  ],
+  "exclude":[
+    "node_modules"
+  ]
+}

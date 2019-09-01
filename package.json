@@ -1,0 +1,11 @@
+{
+    "dependencies": {
+        "socket.io-client": "^2.2.0"
+    },
+    "devDependencies": {
+        "@types/node": "^12.7.3"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    }
+}
