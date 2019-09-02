@@ -2,8 +2,8 @@ from queue import Queue
 import time
 from random import randint
 from typing import Dict, Optional, Tuple, List
-from server.utilities.serialize import to_dict
-from server.common.messages import Action
+from utilities.serialize import to_dict
+from common.messages import Action
 from .entity import Entity
 from .vectors import Vector
 from .world import World, LogicGrid

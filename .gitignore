@@ -1,5 +1,5 @@
 # The compiled JavaScript
-/static/dist/
+/server/static/dist/
 /xp-game/
 
 # ignore the logs, except for the .keep file

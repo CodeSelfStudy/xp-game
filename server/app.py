@@ -2,12 +2,12 @@ import os
 from typing import Dict
 from flask import Flask, request, render_template
 from flask_socketio import SocketIO
-from server.web.sanitizer import sanitize
-from server.web.assets import cache_buster
-from server.utilities.logger import create_logger
-from server.utilities.serialize import from_dict
-from server.common.messages import ClientEvent
-import server.game.ticker as ticker
+from web.sanitizer import sanitize
+from web.assets import cache_buster
+from utilities.logger import create_logger
+from utilities.serialize import from_dict
+from common.messages import ClientEvent
+import game.ticker as ticker
 
 log = create_logger(__name__)
 log.game_event('created logger')

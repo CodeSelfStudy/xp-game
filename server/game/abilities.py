@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, Generator, Any, Tuple, Optional
-from server.common.messages import Action
+from common.messages import Action
 from . import vectors as vec
 from .entity import Entity
 from .world import LogicGrid
