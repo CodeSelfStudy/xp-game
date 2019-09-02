@@ -14,7 +14,7 @@ clean:
 	find . -name '__pycache__' -exec rm -rf {} +
 
 start:
-	tsc --watch& python app.py
+	tsc --watch& python server/app.py
 
 flake8:
 	flake8 .
