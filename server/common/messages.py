@@ -1,33 +1,13 @@
-from typing import Union, Optional
+from typing import Union
 from dataclasses import dataclass
-from .vectors import Vector
-
-
-@dataclass
-class Entity:
-    position: Vector
-    client_id: str
-    health: int
-
-    def get_name(self):
-        return self.client_id[-7:]
 
 
 @dataclass(frozen=True)
 class Action:
     """An action in the game world undertaken by a specific entity"""
-    entity: Entity
+    entity_id: str
     kind: str  # Move | Attack | Spawn | Despawn | Dash
     direction: str = ""  # North | South | East | West
-
-
-@dataclass(frozen=True)
-class Ability:
-    kind: str  # Move | Attack | Dash
-    color: str
-    reach: int
-    delay: int
-    damage: Optional[int] = None
 
 
 @dataclass(frozen=True)

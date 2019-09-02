@@ -3,19 +3,20 @@ import time
 from random import randint
 from typing import Dict, Optional, Tuple, List
 from server.utilities.serialize import to_dict
-from server.domain.entity import Entity
-from server.domain.vectors import Vector
-from server.domain.messages import Action
+from server.common.messages import Action
+from .entity import Entity
+from .vectors import Vector
 from .world import World, LogicGrid
 from .environment import generate_random_map
-from .actions import perform_ability, Context, abilities, ActionRoutine
+from .abilities import (perform_ability, AbilityContext, abilities,
+                        ActionRoutine)
 
 
 TICK_INTERVAL = 0.1
 WORLD_WIDTH = 10
 WORLD_HEIGHT = 10
 
-ActionMessage = Tuple[Action, Optional[ActionRoutine]]
+ActionMessage = Tuple[Entity, Action, Optional[ActionRoutine]]
 
 action_queue: 'Queue[ActionMessage]' = Queue()
 
@@ -50,18 +51,17 @@ def enqueue_client_message(message: Dict[str, str], client_id: str):
     if kind == 'Spawn':
         spawn_entity(client_id)
         return
-    entity = game_state.get_entity_by_id(client_id)
-    if entity:
-        action = Action(entity=entity, kind=kind,
-                        direction=message.get('direction', ""))
-        enqueue_action(action, None)
+    action = Action(entity_id=client_id, kind=kind,
+                    direction=message.get('direction', ""))
+    enqueue_action(action, None)
 
 
 def enqueue_action(action: Action,
                    in_progress: Optional[ActionRoutine] = None):
     """Put an action into the action queue, to be processed at the next tick"""
-    if action.entity and action.kind in abilities:
-        action_queue.put((action, in_progress))
+    entity = game_state.get_entity_by_id(action.entity_id)
+    if entity and action.kind in abilities:
+        action_queue.put((entity, action, in_progress))
         emit('view', {
             'action': action,
             'ability': abilities.get(action.kind)
@@ -81,23 +81,23 @@ def process_tick() -> List[Tuple[Action, ActionRoutine]]:
     # This leads to pressing the move button twice cancelling the previous move
     action_filter: Dict[str, ActionMessage] = {}
     while not action_queue.empty():
-        a, in_progress = action_queue.get(block=True)
-        if not a.entity:
+        e, a, in_progress = action_queue.get(block=True)
+        if not e:
             continue
-        action_filter[a.entity.client_id] = (a, in_progress)
+        action_filter[e.client_id] = (e, a, in_progress)
 
-    context = Context(logic_grid=LogicGrid.get_logic_grid(game_state),
-                      user_data=user_data,
-                      socket=socket_server)
+    context = AbilityContext(logic_grid=LogicGrid.get_logic_grid(game_state),
+                             user_data=user_data,
+                             socket=socket_server)
 
     actions_in_progress = []
-    for a, in_progress in action_filter.values():
+    for e, a, in_progress in action_filter.values():
         if a.kind in abilities:
             if not in_progress:
                 in_progress = perform_ability(a)
                 in_progress.__next__()
             try:
-                in_progress.send((a, context))
+                in_progress.send((e, a, context))
             except StopIteration:
                 in_progress = None
             if in_progress:

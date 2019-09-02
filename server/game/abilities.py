@@ -1,7 +1,8 @@
 from dataclasses import dataclass
 from typing import Dict, Generator, Any, Tuple, Optional
-from server.domain.messages import Action
-from server.domain import vectors as vec
+from server.common.messages import Action
+from . import vectors as vec
+from .entity import Entity
 from .world import LogicGrid
 
 
@@ -15,13 +16,13 @@ class Ability:
 
 
 @dataclass(frozen=True)
-class Context:
+class AbilityContext:
     logic_grid: LogicGrid
     user_data: Dict[str, str]
     socket: Any
 
 
-ActionFrame = Tuple[Action, Context]
+ActionFrame = Tuple[Entity, Action, AbilityContext]
 ActionRoutine = Generator[None, ActionFrame, None]
 
 abilities: Dict[str, Ability] = {
@@ -38,35 +39,38 @@ def perform_ability(action: Action) -> ActionRoutine:
     ability = abilities[action.kind]
     duration = ability.delay
 
-    def execute_action(a: Action, c: Context):
+    def execute_action(frame: ActionFrame):
+        e, a, c = frame
         if a.kind == "Move":
-            return perform_move(a, c)
+            return perform_move(frame)
         if a.kind == "Attack":
-            return perform_attack(a, c)
+            return perform_attack(frame)
         if a.kind == "Dash":
-            return perform_dash(a, c)
+            return perform_dash(frame)
         if a.kind == "Aimed Shot":
-            return perform_aimed_shot(a, c)
+            return perform_aimed_shot(frame)
 
     while duration > 0:
         # yield until the duration has expired
         _ = (yield)
         duration -= 1
-    a, c = (yield)
-    execute_action(a, c)
+    frame = (yield)
+    execute_action(frame)
 
 
-def perform_move(action: Action, ctx: Context) -> None:
-    entity, direction = action.entity, action.direction
+def perform_move(frame: ActionFrame) -> None:
+    entity, action, ctx = frame
+    direction = action.direction
     step = vec.dir_to_vec(direction)
     destination = vec.add(step, entity.position) if step else None
     if destination and ctx.logic_grid.is_passable(destination):
         ctx.logic_grid.move_entity(entity, destination)
 
 
-def perform_attack(action: Action, ctx: Context) -> None:
+def perform_attack(frame: ActionFrame) -> None:
     ability = abilities["Attack"]
-    entity, direction = action.entity, action.direction
+    entity, action, ctx = frame
+    direction = action.direction
     step = vec.dir_to_vec(direction)
     target_pos = vec.add(step, entity.position)
 
@@ -89,9 +93,10 @@ def perform_attack(action: Action, ctx: Context) -> None:
     ctx.socket.emit('chat', event)
 
 
-def perform_dash(action: Action, ctx: Context) -> None:
+def perform_dash(frame: ActionFrame) -> None:
     ability = abilities['Dash']
-    entity, direction = action.entity, action.direction
+    entity, action, ctx = frame
+    direction = action.direction
     step_dir = vec.dir_to_vec(direction)
     if not step_dir:
         return None
@@ -101,9 +106,10 @@ def perform_dash(action: Action, ctx: Context) -> None:
         ctx.logic_grid.move_entity(entity, path[-1])
 
 
-def perform_aimed_shot(action: Action, ctx: Context) -> None:
+def perform_aimed_shot(frame: ActionFrame) -> None:
     ability = abilities["Aimed Shot"]
-    entity, direction = action.entity, action.direction
+    entity, action, ctx = frame
+    direction = action.direction
     step = vec.dir_to_vec(direction)
     if not step:
         return None

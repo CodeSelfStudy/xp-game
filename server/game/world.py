@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Optional
-from server.domain.entity import Entity
-from server.domain.vectors import Vector
+from .entity import Entity
+from .vectors import Vector
 
 
 @dataclass

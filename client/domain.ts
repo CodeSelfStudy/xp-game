@@ -19,7 +19,7 @@ export type RenderContext = {
 export type ActionKind = "Move" | "Attack" | "Spawn" | "Dash" | "Aimed Shot"; 
 
 export type Action = {
-    entity?: Entity;
+    entity_id?: string;
     kind: ActionKind;
     direction?: Direction;
 }

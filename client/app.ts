@@ -64,7 +64,7 @@ async function initialize(){
     initializeChatListener(socket);
     // listen for mid-update actions performed by other players
     socket.on('view', (actionEvent: { action: Action, ability: Ability }) => {
-        let entity = world.entities.find(e=> e.client_id == actionEvent.action.entity.client_id);
+        let entity = world.entities.find(e=> e.client_id == actionEvent.action.entity_id);
         if(entity){
             entity.currentAction = actionEvent;
         }
