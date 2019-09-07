@@ -1,10 +1,10 @@
-import { World, Action } from "../common/domain.js";
+import { World, Action, Entity } from "../common/domain.js";
 import { sendAction, requestLogin } from "../common/server.js"
 import * as io from "socket.io-client";
 
 // hack -- to connect to the game, use this:
-var socket = io("http://xp-game.codeselfstudy.com");
-//var socket = io("http://localhost:5000");
+//var socket = io("http://xp-game.codeselfstudy.com");
+var socket = io("http://localhost:5000");
 
 interface AiConfig {
     name: string,
@@ -12,6 +12,7 @@ interface AiConfig {
 }
 
 export interface AiContext {
+    self: Entity;
     act(action: Action): void;
     world: World;
 }
@@ -21,8 +22,7 @@ export interface AiContext {
  * controlled via the `update` function, which is called each tick with the
  * most recent game state, `World`.
  */
-export function initialize(cfg: AiConfig,
-                           update: (ctx: AiContext) => void) {
+export function initialize(cfg: AiConfig, update: (ctx: AiContext) => void) {
     function respawn() {
         requestLogin(socket, cfg.name);
     }
@@ -35,6 +35,7 @@ export function initialize(cfg: AiConfig,
         setTimeout(respawn, cfg.respawnTime);
     });
     socket.on('world', (world: World) => {
-        update({act, world});
+        let self = world.entities.find(e=> e.client_id == socket.id);
+        if(self){ update({self, act, world}); }
     });
 }

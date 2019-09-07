@@ -3,8 +3,7 @@ import { ActionKind } from "../common/domain.js";
 import { initialize, AiContext } from "./base.js";
 
 /**
- * This is a super simple ai implementation that moves randomly
- * every so often.
+ * This is a super simple ai implementation that moves and attacks randomly
  */
 
 
@@ -16,7 +15,7 @@ function update(context: AiContext){
     }
 
     let rand = Math.random();
-    if(rand > 0.90){
+    if(!context.self.current_action && rand > 0.50){
         let kind: ActionKind = Math.random() >= 0.5 ? "Move" : "Attack";
         context.act({kind: kind, direction: direction()});
     }

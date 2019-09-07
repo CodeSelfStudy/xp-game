@@ -16,6 +16,7 @@ def deploy(c):
         c.run("source venv/bin/activate && pip install -r requirements.txt",
               echo=True)
         c.run("tsc", echo=True)
-        c.run("sudo cp -r server/static/ /var/www/xpgame.com/", pty=True, echo=True)
+        c.run("sudo cp -r server/static/ /var/www/xpgame.com/",
+              pty=True, echo=True)
         c.run("sudo systemctl restart xpgame", pty=True, echo=True)
         print("Deploy completed")
