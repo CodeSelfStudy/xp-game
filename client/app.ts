@@ -63,10 +63,11 @@ async function initialize(){
     // Boot the chat system
     initializeChatListener(socket);
     // listen for mid-update actions performed by other players
-    socket.on('view', (actionEvent: { action: Action, ability: Ability }) => {
-        let entity = world.entities.find(e=> e.client_id == actionEvent.action.entity_id);
+    socket.on('view', (actionEvent: [Action, Ability] ) => {
+        let [action] = actionEvent;
+        let entity = world.entities.find(e=> e.client_id == action.entity_id);
         if(entity){
-            entity.currentAction = actionEvent;
+            entity.current_action = actionEvent;
         }
         render(getRenderContext(), world);
     });
@@ -102,13 +103,13 @@ function render(c: RenderContext, world: World) {
         let localPos = worldToView(e.position);
         drawTile(c, localPos, "hero");
         // TODO - split action rendering into a separate layer
-        if(e.currentAction){
-            console.log(e.currentAction)
-            let dir = Vec.dirToVec(e.currentAction.action.direction);
-            let range = e.currentAction.ability.reach;
+        if(e.current_action){
+            let [action, ability] = e.current_action;
+            let dir = Vec.dirToVec(action.direction);
+            let range = ability.reach;
             for(var i = 1; i <= range; i++){
                 let actionTarget = Vec.add(e.position, Vec.multiply(dir, i))
-                drawRect(c, worldToView(actionTarget), {strokeColor: e.currentAction.ability.color});
+                drawRect(c, worldToView(actionTarget), {strokeColor: ability.color});
             }
         }
     });

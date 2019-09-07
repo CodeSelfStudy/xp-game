@@ -96,10 +96,12 @@ def process_tick() -> List[Tuple[Action, ActionRoutine]]:
             if not in_progress:
                 in_progress = perform_ability(a)
                 in_progress.__next__()
+                e.current_action = (a, abilities[a.kind])
             try:
                 in_progress.send((e, a, context))
             except StopIteration:
                 in_progress = None
+                e.current_action = None
             if in_progress:
                 actions_in_progress.append((a, in_progress))
 

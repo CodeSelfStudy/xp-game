@@ -1,5 +1,14 @@
-from typing import Union
 from dataclasses import dataclass
+from typing import Union, Optional
+
+
+@dataclass(frozen=True)
+class Ability:
+    kind: str  # Move | Attack | Dash
+    color: str
+    reach: int
+    delay: int
+    damage: Optional[int] = None
 
 
 @dataclass(frozen=True)

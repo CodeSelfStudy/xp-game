@@ -41,7 +41,7 @@ export type Entity = {
     position: Vector;
     client_id: string;
     health: number;
-    currentAction?: { action: Action, ability: Ability };
+    current_action?: [Action, Ability];
 }
 
 export type Tile = {
